@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 import { CreateDoctorDialog } from "@/components/admin/create-doctor-dialog";
 
 const doctors = [
@@ -48,7 +49,7 @@ export default function AdminDoctorsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader 
         title="Doctors" 
         subtitle="Manage doctor accounts and booking availability (doctors can update their own schedules)"
@@ -61,7 +62,7 @@ export default function AdminDoctorsPage() {
       />
       
       {successMessage && (
-        <div className="p-4 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 rounded-lg">
+        <div className="p-3 sm:p-4 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 rounded-lg text-sm sm:text-base">
           {successMessage}
         </div>
       )}
@@ -71,12 +72,68 @@ export default function AdminDoctorsPage() {
         <Input
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9"
+          className="pl-9 h-10"
           placeholder="Search by name, specialty, qualifications, or status..."
         />
       </div>
 
-      <DataTable
+      {/* Mobile Card Layout */}
+      <div className="space-y-3 md:hidden">
+        {rows.map((doctor) => (
+          <Card key={doctor.id}>
+            <CardContent className="p-4">
+              <div className="space-y-3">
+                <div>
+                  <h3 className="font-semibold text-base">{doctor.name}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">{doctor.specialty}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{doctor.qualifications}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Account Status</p>
+                    <Badge variant={doctor.active ? "success" : "secondary"} className="mt-1">
+                      {doctor.active ? "Active" : "Deactivated"}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Booking</p>
+                    <Badge variant={doctor.available ? "success" : "warning"} className="mt-1">
+                      {doctor.available ? "Available" : "Unavailable"}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-2 pt-2 border-t">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => setAvailability((prev) => ({ ...prev, [doctor.id]: !(prev[doctor.id] ?? true) }))}
+                    disabled={!doctor.active}
+                  >
+                    {doctor.available ? "Mark unavailable" : "Restore availability"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() =>
+                      setDeactivatedIds((prev) =>
+                        prev.includes(doctor.id) ? prev.filter((id) => id !== doctor.id) : [...prev, doctor.id]
+                      )
+                    }
+                  >
+                    {doctor.active ? "Deactivate" : "Reactivate"}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Desktop Table */}
+      <div className="hidden md:block">
+        <DataTable
         data={rows}
         columns={[
           { key: "name", header: "Name" },
@@ -120,7 +177,8 @@ export default function AdminDoctorsPage() {
             ),
           },
         ]}
-      />
+        />
+      </div>
       
       <CreateDoctorDialog 
         open={isDialogOpen} 

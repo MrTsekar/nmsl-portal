@@ -17,11 +17,11 @@ export default async function PatientDoctorDetailPage({ params }: { params: Prom
   const appointmentType = appointment.consultationType === "telehealth" ? "Telemedicine" : "Physical";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader title={appointment.doctorName} subtitle="Doctor profile and post-consultation collaboration" />
 
       <SectionCard title="Consultation summary">
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
           <div>
             <p className="text-xs text-muted-foreground">Appointment ID</p>
             <p className="text-sm font-medium">{appointment.id}</p>

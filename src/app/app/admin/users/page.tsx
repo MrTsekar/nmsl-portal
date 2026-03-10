@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 import { mockUsers } from "@/lib/mocks/data";
 
 export default function AdminUsersPage() {
@@ -35,7 +36,7 @@ export default function AdminUsersPage() {
   }, [deactivatedIds, searchQuery]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader title="Users" subtitle="User directory across patient, doctor, and admin roles" />
       
       <div className="relative">
@@ -43,12 +44,65 @@ export default function AdminUsersPage() {
         <Input
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9"
+          className="pl-9 h-10"
           placeholder="Search by name, email, role, or location..."
         />
       </div>
 
-      <DataTable
+      {/* Mobile Card Layout */}
+      <div className="space-y-3 md:hidden">
+        {rows.map((user) => (
+          <Card key={user.id}>
+            <CardContent className="p-4">
+              <div className="space-y-3">
+                <div>
+                  <h3 className="font-semibold text-base">{user.name}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">{user.email}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Role</p>
+                    <Badge variant="secondary" className="capitalize mt-1">{user.role}</Badge>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Account</p>
+                    <Badge variant={user.active ? "success" : "secondary"} className="mt-1">
+                      {user.active ? "Active" : "Deactivated"}
+                    </Badge>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Location</p>
+                  <p className="text-sm font-medium mt-1">{user.location}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t">
+                  <Link href={`/app/admin/users/${user.id}`} className="flex-1">
+                    <Button variant="outline" size="sm" className="w-full">
+                      Open profile
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() =>
+                      setDeactivatedIds((prev) =>
+                        prev.includes(user.id) ? prev.filter((id) => id !== user.id) : [...prev, user.id],
+                      )
+                    }
+                  >
+                    {user.active ? "Deactivate" : "Reactivate"}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Desktop Table */}
+      <div className="hidden md:block">
+        <DataTable
         data={rows}
         columns={[
           { key: "name", header: "Name" },
@@ -83,7 +137,8 @@ export default function AdminUsersPage() {
             ),
           },
         ]}
-      />
+        />
+      </div>
     </div>
   );
 }

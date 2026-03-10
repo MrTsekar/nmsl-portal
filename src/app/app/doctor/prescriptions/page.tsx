@@ -5,6 +5,7 @@ import { DataTable } from "@/components/shared/data-table";
 import { PageHeader } from "@/components/shared/page-header";
 import { SectionCard } from "@/components/shared/section-card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { AddPrescriptionsDialog } from "@/components/doctor/add-prescriptions-dialog";
 import { mockAppointments } from "@/lib/mocks/data";
 
@@ -52,17 +53,47 @@ export default function DoctorPrescriptionsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader title="Prescriptions" subtitle="Create and review active medication orders" />
       
       {successMessage && (
-        <div className="p-4 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 rounded-lg">
+        <div className="p-3 sm:p-4 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 rounded-lg text-sm sm:text-base">
           {successMessage}
         </div>
       )}
 
       <SectionCard title="Patients">
-        <DataTable
+        {/* Mobile Card Layout - Patients */}
+        <div className="space-y-3 md:hidden">
+          {patients.map((patient) => (
+            <Card key={patient.id}>
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  <div>
+                    <h3 className="font-semibold text-base">{patient.name}</h3>
+                    <p className="text-sm text-muted-foreground mt-1">Last visit: {patient.lastVisit}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Active Prescriptions</p>
+                    <p className="text-lg font-semibold mt-1">{patient.prescriptionCount}</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => handleAddPrescription(patient.id, patient.name)}
+                  >
+                    Add Prescription
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Desktop Table - Patients */}
+        <div className="hidden md:block">
+          <DataTable
           data={patients}
           columns={[
             { key: "name", header: "Patient" },
@@ -86,14 +117,48 @@ export default function DoctorPrescriptionsPage() {
               ),
             },
           ]}
-        />
+          />
+        </div>
       </SectionCard>
 
       <SectionCard title="Recent prescriptions">
         {prescriptions.length === 0 ? (
           <p className="text-sm text-muted-foreground">Prescription list and refill requests with audit history.</p>
         ) : (
-          <DataTable
+          <>
+            {/* Mobile Card Layout - Prescriptions */}
+            <div className="space-y-3 lg:hidden">
+              {prescriptions.map((prescription) => (
+                <Card key={prescription.id}>
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      <div>
+                        <h3 className="font-semibold text-base">{prescription.drugName}</h3>
+                        <p className="text-sm text-muted-foreground mt-1">Patient: {prescription.patientName}</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Dosage</p>
+                          <p className="text-sm font-medium mt-1">{prescription.dosage}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Frequency</p>
+                          <p className="text-sm font-medium mt-1">{prescription.frequency}</p>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Duration</p>
+                        <p className="text-sm font-medium mt-1">{prescription.duration}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Desktop Table - Prescriptions */}
+            <div className="hidden lg:block">
+              <DataTable
             data={prescriptions}
             columns={[
               { key: "patientName", header: "Patient" },
@@ -102,7 +167,9 @@ export default function DoctorPrescriptionsPage() {
               { key: "frequency", header: "Frequency" },
               { key: "duration", header: "Duration" },
             ]}
-          />
+            />
+          </div>
+          </>
         )}
       </SectionCard>
       

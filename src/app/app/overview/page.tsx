@@ -10,7 +10,7 @@ export default function OverviewPage() {
   const role = useAuthStore((state) => state.user?.role ?? "patient");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader
         title="Overview"
         subtitle="Role-aware clinical and operational summary"

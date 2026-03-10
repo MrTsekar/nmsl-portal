@@ -25,10 +25,10 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
   const user = query.data;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader title={user.name} subtitle="Access, identity, and activity context" />
       <SectionCard title="Profile summary">
-        <div className="grid gap-3 sm:grid-cols-2 text-sm">
+        <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 text-sm">
           <div>
             <p className="text-xs text-muted-foreground">User ID</p>
             <p className="font-medium">{user.id}</p>

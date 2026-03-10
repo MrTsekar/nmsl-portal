@@ -8,6 +8,7 @@ import { SectionCard } from "@/components/shared/section-card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
 import { mockResults } from "@/lib/mocks/data";
 import { useUiStore } from "@/store/ui-store";
 
@@ -37,12 +38,12 @@ export default function AdminSettingsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader title="Admin Settings" subtitle="System-level controls and operational defaults" />
 
       <SectionCard title="Branding">
-        <div className="grid gap-4 md:grid-cols-[180px_1fr]">
-          <div className="flex h-28 w-40 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/30">
+        <div className="grid gap-4 sm:gap-5 md:grid-cols-[180px_1fr]">
+          <div className="flex h-28 w-full sm:w-40 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/30">
             {preview ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={preview} alt="Company logo preview" className="max-h-24 w-auto object-contain" />
@@ -57,7 +58,7 @@ export default function AdminSettingsPage() {
               <input type="file" accept="image/*" className="hidden" onChange={onUploadLogo} />
             </label>
             <div>
-              <Button variant="outline" onClick={() => { setPreview(null); setCompanyLogoUrl(null); }}>
+              <Button variant="outline" size="sm" onClick={() => { setPreview(null); setCompanyLogoUrl(null); }}>
                 <Trash2 className="mr-2 h-4 w-4" /> Remove logo
               </Button>
             </div>
@@ -67,23 +68,24 @@ export default function AdminSettingsPage() {
       </SectionCard>
 
       <SectionCard title="Platform configuration">
-        <div className="grid gap-3 md:grid-cols-2">
-          <Input defaultValue="noreply@nmsl.app" />
-          <Input defaultValue="15" />
-          <Input defaultValue="Main Campus" />
-          <Input defaultValue="UTC+8" />
+        <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
+          <Input className="h-10" defaultValue="noreply@nmsl.app" />
+          <Input className="h-10" defaultValue="15" />
+          <Input className="h-10" defaultValue="Main Campus" />
+          <Input className="h-10" defaultValue="UTC+8" />
         </div>
-        <div className="mt-3">
+        <div className="mt-3 sm:mt-4">
           <Button>Save configuration</Button>
         </div>
       </SectionCard>
 
       <SectionCard title="Portal announcements">
-        <div className="space-y-3">
+        <div className="space-y-3 sm:space-y-4">
           <Textarea
             value={announcement}
             onChange={(event) => setAnnouncement(event.target.value)}
             placeholder="Write a homepage announcement for all users"
+            className="min-h-[80px]"
           />
           <Button
             onClick={() => {
@@ -98,7 +100,36 @@ export default function AdminSettingsPage() {
       </SectionCard>
 
       <SectionCard title="Lab result email delivery queue">
-        <DataTable
+        {/* Mobile Card Layout */}
+        <div className="space-y-3 lg:hidden">
+          {mockResults.map((result, idx) => (
+            <Card key={idx}>
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  <div>
+                    <h3 className="font-semibold text-base">{result.patientName}</h3>
+                    <p className="text-sm text-muted-foreground mt-1">{result.testName}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Date</p>
+                      <p className="text-sm font-medium mt-1">{result.date}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Payment</p>
+                      <p className="text-sm font-medium mt-1">{result.status === "ready" ? "Paid" : "Pending payment"}</p>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm" className="w-full">Send by email</Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Desktop Table */}
+        <div className="hidden lg:block">
+          <DataTable
           data={mockResults.map((result) => ({
             ...result,
             paymentStatus: result.status === "ready" ? "Paid" : "Pending payment",
@@ -114,7 +145,8 @@ export default function AdminSettingsPage() {
               render: () => <Button variant="outline" size="sm">Send by email</Button>,
             },
           ]}
-        />
+          />
+        </div>
       </SectionCard>
     </div>
   );

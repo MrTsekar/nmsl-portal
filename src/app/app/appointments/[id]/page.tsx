@@ -13,12 +13,12 @@ export default function AppointmentDetailPage({ params }: { params: Promise<{ id
   const query = useAppointment(id);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader title={`Appointment ${id}`} subtitle="Detailed workflow and context" />
       {query.isLoading ? <LoadState /> : null}
       {query.isError ? <ErrorState /> : null}
       {query.data ? (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-3 sm:gap-4 lg:grid-cols-2">
           <SectionCard title="Summary">
             <div className="grid gap-3 text-sm sm:grid-cols-2">
               <div>
@@ -75,9 +75,9 @@ export default function AppointmentDetailPage({ params }: { params: Promise<{ id
 
           <SectionCard title="Prescription">
             {query.data.prescriptions?.length ? (
-              <div className="space-y-3">
+              <div className="space-y-2.5 sm:space-y-3">
                 {query.data.prescriptions.map((prescription) => (
-                  <div key={prescription.id} className="rounded-md border border-border p-3">
+                  <div key={prescription.id} className="rounded-md border border-border p-3 sm:p-4">
                     <div className="flex items-start justify-between gap-2">
                       <p className="text-sm font-semibold">{prescription.drugName}</p>
                     </div>

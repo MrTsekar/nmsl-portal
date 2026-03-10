@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
 
 type Testimonial = {
   id: string;
@@ -69,11 +70,11 @@ export default function AdminTestimonialsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader title="Testimonials" subtitle="Create and manage homepage patient testimonials" />
 
       <SectionCard title="Add new testimonial">
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
           <div className="space-y-1">
             <Label>Patient Name (optional / initials)</Label>
             <Input value={patientName} onChange={(event) => setPatientName(event.target.value)} placeholder="e.g. A.L." />
@@ -108,12 +109,54 @@ export default function AdminTestimonialsPage() {
             </Select>
           </div>
           <div className="flex items-end">
-            <Button className="w-full" onClick={addTestimonial}>Save testimonial</Button>
+            <Button className="w-full h-10" onClick={addTestimonial}>Save testimonial</Button>
           </div>
         </div>
       </SectionCard>
 
-      <DataTable
+      {/* Mobile Card Layout */}
+      <div className="space-y-3 md:hidden">
+        {testimonials.map((testimonial) => (
+          <Card key={testimonial.id}>
+            <CardContent className="p-4">
+              <div className="space-y-3">
+                <div>
+                  <h3 className="font-semibold text-base">{testimonial.title}</h3>
+                  <p className="text-sm text-muted-foreground mt-2">{testimonial.message}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Patient</p>
+                    <p className="text-sm font-medium mt-1">{testimonial.patientName}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Category</p>
+                    <p className="text-sm font-medium mt-1">{testimonial.patientCategory}</p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Service Type</p>
+                  <p className="text-sm font-medium mt-1">{testimonial.serviceType}</p>
+                </div>
+                <div className="pt-2 border-t">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => setTestimonials((prev) => prev.filter((item) => item.id !== testimonial.id))}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Desktop Table */}
+      <div className="hidden md:block">
+        <DataTable
         data={testimonials}
         columns={[
           { key: "patientName", header: "Patient" },
@@ -134,7 +177,8 @@ export default function AdminTestimonialsPage() {
             ),
           },
         ]}
-      />
+        />
+      </div>
     </div>
   );
 }
