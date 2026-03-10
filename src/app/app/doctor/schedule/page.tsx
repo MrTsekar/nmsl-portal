@@ -1,11 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CalendarOff, CalendarCheck } from "lucide-react";
+import { CalendarOff, CalendarCheck, AlertTriangle } from "lucide-react";
 import { DataTable } from "@/components/shared/data-table";
 import { PageHeader } from "@/components/shared/page-header";
 import { SectionCard } from "@/components/shared/section-card";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { NotificationBanner } from "@/components/shared/notification-banner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,10 @@ export default function DoctorSchedulePage() {
   const [unavailableTo, setUnavailableTo] = useState("");
   const [notes, setNotes] = useState("");
   const [blockedSlots, setBlockedSlots] = useState<BlockedSlot[]>([]);
+  const [conflictWarning, setConflictWarning] = useState<{
+    count: number;
+    appointments: typeof mockAppointments;
+  } | null>(null);
 
   const weeklyRows = useMemo(
     () =>
@@ -37,8 +42,38 @@ export default function DoctorSchedulePage() {
     [],
   );
 
+  // Check for appointment conflicts
+  const checkConflicts = (from: string, to: string) => {
+    if (!from || !to) return [];
+    
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+    
+    // Find appointments that fall within the unavailable period
+    const conflictingAppointments = weeklyRows.filter((appointment) => {
+      // Parse appointment date/time (in mock data format)
+      const appointmentDate = new Date(`${appointment.date} ${appointment.time}`);
+      return appointmentDate >= fromDate && appointmentDate <= toDate && appointment.status === "confirmed";
+    });
+    
+    return conflictingAppointments;
+  };
+
   const onBlockAvailability = () => {
     if (!unavailableFrom || !unavailableTo) return;
+    
+    // Check for conflicts
+    const conflicts = checkConflicts(unavailableFrom, unavailableTo);
+    
+    if (conflicts.length > 0) {
+      setConflictWarning({
+        count: conflicts.length,
+        appointments: conflicts,
+      });
+      // In a real app, this would trigger notifications to admin and patients
+      // and potentially trigger the auto-rebook flow
+    }
+    
     const newSlot: BlockedSlot = {
       id: Date.now().toString(),
       from: unavailableFrom,
@@ -68,6 +103,23 @@ export default function DoctorSchedulePage() {
   return (
     <div className="space-y-4 sm:space-y-6">
       <PageHeader title="Schedule" subtitle="Manage daily clinic and telehealth schedule" />
+
+      {/* Conflict Warning Notification */}
+      {conflictWarning && (
+        <NotificationBanner
+          type="warning"
+          title={`⚠️ ${conflictWarning.count} Confirmed Appointment${conflictWarning.count > 1 ? 's' : ''} Affected`}
+          message={`You have marked yourself unavailable during a time when you have confirmed appointments. Admin will be notified to rebook: ${conflictWarning.appointments.map(a => `${a.patientName} (${a.date} ${a.time})`).join(', ')}. Patients will receive automatic rebooking notifications.`}
+          action={{
+            label: "View Affected Appointments",
+            onClick: () => {
+              // Scroll to appointments table
+              document.querySelector('[data-appointments-table]')?.scrollIntoView({ behavior: 'smooth' });
+            }
+          }}
+          onDismiss={() => setConflictWarning(null)}
+        />
+      )}
 
       <SectionCard title="Availability control">
         <div className="grid gap-3 sm:gap-4 md:grid-cols-4">
@@ -120,7 +172,7 @@ export default function DoctorSchedulePage() {
       </SectionCard>
 
       {/* Mobile Card Layout */}
-      <div className="space-y-3 lg:hidden">
+      <div className="space-y-3 lg:hidden" data-appointments-table>
         {weeklyRows.map((appointment, idx) => (
           <Card key={idx}>
             <CardContent className="p-4">
@@ -159,7 +211,7 @@ export default function DoctorSchedulePage() {
       </div>
 
       {/* Desktop Table */}
-      <div className="hidden lg:block">
+      <div className="hidden lg:block" data-appointments-table>
         <DataTable
         data={weeklyRows}
         columns={[

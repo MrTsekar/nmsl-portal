@@ -2,16 +2,19 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarPlus } from "lucide-react";
+import { CalendarPlus, AlertTriangle } from "lucide-react";
 import { DataTable } from "@/components/shared/data-table";
 import { ErrorState } from "@/components/shared/error-state";
 import { FilterBar } from "@/components/shared/filter-bar";
 import { LoadState } from "@/components/shared/load-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { NotificationBanner } from "@/components/shared/notification-banner";
+import { AutoRebookDialog } from "@/components/shared/auto-rebook-dialog";
 import { RescheduleAppointmentDialog } from "@/components/shared/reschedule-appointment-dialog";
 import { DoctorAppointmentActionsDialog } from "@/components/shared/doctor-appointment-actions-dialog";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -42,8 +45,18 @@ export default function AppointmentsPage() {
   const [doctorActionsDialogOpen, setDoctorActionsDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [rebookDialogOpen, setRebookDialogOpen] = useState(false);
+  const [conflictedAppointments, setConflictedAppointments] = useState<string[]>([]);
 
   const query = useAppointments(status);
+
+  // Mock: Simulate appointments affected by doctor unavailability
+  // In real app, this would come from backend API
+  const mockConflictedAppointmentIds = useMemo(() => {
+    // Simulate 1 conflicted appointment for demo
+    const confirmed = (query.data ?? []).filter(a => a.status === "confirmed");
+    return confirmed.length > 0 ? [confirmed[0].id] : [];
+  }, [query.data]);
   const doctors = useMemo(() => mockUsers.filter((item) => item.role === "doctor"), []);
 
   // Filter doctors by selected specialty
@@ -173,12 +186,74 @@ export default function AppointmentsPage() {
     setTimeout(() => setSuccessMessage(null), 5000);
   };
 
+  const handleRebookAppointment = (appointment: Appointment) => {
+    setSelectedAppointment(appointment);
+    setRebookDialogOpen(true);
+  };
+
+  const handleRebookSuccess = (doctorId: string, newDate: string, newTime: string) => {
+    setSuccessMessage(`Appointment rebooked successfully with new doctor for ${newDate} at ${newTime}`);
+    setTimeout(() => setSuccessMessage(null), 5000);
+    if (selectedAppointment) {
+      setConflictedAppointments(prev => prev.filter(id => id !== selectedAppointment.id));
+      setWorkflowStatus(selectedAppointment.id, "confirmed");
+    }
+  };
+
+  // Get alternative doctors for rebooking
+  const getAlternativeDoctors = (originalSpecialty: string) => {
+    return doctors
+      .filter(d => d.specialty === originalSpecialty)
+      .map(d => ({
+        id: d.id,
+        name: d.name,
+        specialty: d.specialty || "General Practice",
+        qualifications: d.qualifications || "MBBS",
+        availableSlots: [
+          "Jan 15, 2025 at 09:00 AM",
+          "Jan 15, 2025 at 02:00 PM",
+          "Jan 16, 2025 at 10:00 AM",
+          "Jan 16, 2025 at 03:00 PM",
+        ],
+      }));
+  };
+
+  const isAppointmentConflicted = (appointmentId: string) => {
+    return mockConflictedAppointmentIds.includes(appointmentId) || conflictedAppointments.includes(appointmentId);
+  };
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <PageHeader title="Appointments" subtitle="List, filter, and inspect appointment workflows" />
       
+      {/* Admin/Doctor notification for conflicted appointments */}
+      {(user?.role === "admin" || user?.role === "doctor") && mockConflictedAppointmentIds.length > 0 && (
+        <NotificationBanner
+          type="error"
+          title="🚨 Appointments Require Rebooking"
+          message={`${mockConflictedAppointmentIds.length} appointment(s) affected by doctor unavailability. Patients have been notified. Please rebook with alternative doctors immediately.`}
+          action={{
+            label: "View Affected Appointments",
+            onClick: () => {
+              setStatus("confirmed");
+            }
+          }}
+        />
+      )}
+      
+      {/* Patient notification for conflicted appointments */}
+      {user?.role === "patient" && mockConflictedAppointmentIds.some(id => 
+        rows.find(r => r.id === id && r.patientName === user.name)
+      ) && (
+        <NotificationBanner
+          type="warning"
+          title="Your Appointment Needs Rebooking"
+          message="Your doctor is no longer available for your scheduled appointment. We're working to assign you an alternative doctor in the same specialty. You'll receive a confirmation shortly."
+        />
+      )}
+      
       {successMessage && (
-        <div className="p-4 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 rounded-lg">
+        <div className="p-3 sm:p-4 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 rounded-lg text-sm sm:text-base">
           {successMessage}
         </div>
       )}
@@ -298,16 +373,24 @@ export default function AppointmentsPage() {
         <>
           {/* Mobile Card View */}
           <div className="lg:hidden space-y-3">
-            {rows.map((row) => (
-              <Card key={row.id} className="shadow-md border-slate-200/50 dark:border-slate-800/50">
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-base truncate">{row.patientName}</h3>
-                      <p className="text-xs text-muted-foreground">ID: {row.id}</p>
+            {rows.map((row) => {
+              const isConflicted = isAppointmentConflicted(row.id);
+              return (
+                <Card key={row.id} className={`shadow-md ${isConflicted ? "border-2 border-red-500 bg-red-50/50 dark:bg-red-950/20" : "border-slate-200/50 dark:border-slate-800/50"}`}>
+                  <CardContent className="p-4">
+                    {isConflicted && (
+                      <div className="flex items-center gap-2 px-3 py-2 mb-3 rounded-lg bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700">
+                        <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400 flex-shrink-0" />
+                        <span className="text-xs font-semibold text-red-700 dark:text-red-300">Doctor Unavailable - Needs Rebooking</span>
+                      </div>
+                    )}
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-base truncate">{row.patientName}</h3>
+                        <p className="text-xs text-muted-foreground">ID: {row.id}</p>
+                      </div>
+                      <StatusBadge status={row.status} />
                     </div>
-                    <StatusBadge status={row.status} />
-                  </div>
                   
                   <div className="grid grid-cols-2 gap-2 mb-3 text-sm">
                     <div>
@@ -335,12 +418,27 @@ export default function AppointmentsPage() {
                     
                     {user?.role === "admin" ? (
                       <div className="grid grid-cols-2 gap-2">
-                        <Button variant="outline" size="sm" onClick={() => setWorkflowStatus(row.id, "confirmed")}>
-                          Approve
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => handleReschedule(row)}>
-                          Reschedule
-                        </Button>
+                        {isConflicted ? (
+                          <>
+                            <Button 
+                              size="sm" 
+                              className="bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white font-semibold col-span-2"
+                              onClick={() => handleRebookAppointment(row)}
+                            >
+                              <AlertTriangle className="h-4 w-4 mr-2" />
+                              Rebook Now
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button variant="outline" size="sm" onClick={() => setWorkflowStatus(row.id, "confirmed")}>
+                              Approve
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => handleReschedule(row)}>
+                              Reschedule
+                            </Button>
+                          </>
+                        )}
                       </div>
                     ) : user?.role === "doctor" ? (
                       <div className="grid grid-cols-2 gap-2">
@@ -359,7 +457,8 @@ export default function AppointmentsPage() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
 
           {/* Desktop Table View */}
@@ -421,6 +520,27 @@ export default function AppointmentsPage() {
         appointment={selectedAppointment}
         onSuccess={handleDoctorActionsSuccess}
       />
+      
+      {selectedAppointment && (
+        <AutoRebookDialog
+          open={rebookDialogOpen}
+          onOpenChange={setRebookDialogOpen}
+          appointment={{
+            id: selectedAppointment.id,
+            patientName: selectedAppointment.patientName,
+            originalDoctor: selectedAppointment.doctorName,
+            originalDoctorSpecialty: doctors.find(d => d.name === selectedAppointment.doctorName)?.specialty || "General Practice",
+            date: selectedAppointment.date,
+            time: selectedAppointment.time,
+            reason: selectedAppointment.reason,
+            consultationType: selectedAppointment.consultationType || "in-person",
+          }}
+          alternativeDoctors={getAlternativeDoctors(
+            doctors.find(d => d.name === selectedAppointment.doctorName)?.specialty || "General Practice"
+          )}
+          onRebook={handleRebookSuccess}
+        />
+      )}
     </div>
   );
 }
