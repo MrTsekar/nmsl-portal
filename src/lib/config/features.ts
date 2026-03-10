@@ -1,0 +1,5 @@
+export const FEATURE_PREMIUM_THEME_TOGGLE =
+  process.env.NEXT_PUBLIC_ENABLE_PREMIUM_THEME_TOGGLE === "true";
+
+export const FEATURE_ROLE_SWITCHER =
+  process.env.NEXT_PUBLIC_ENABLE_ROLE_SWITCHER === "true";
