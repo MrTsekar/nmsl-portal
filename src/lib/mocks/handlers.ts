@@ -95,6 +95,20 @@ export const mockHandlers = {
         pendingApprovals: 19,
       };
     },
+    
+    // Doctor Management
+    listDoctors: async (params?: { location?: string; specialty?: string }) => {
+      await delay();
+      let doctors = mockUsers.filter((u) => u.role === "doctor");
+      if (params?.location) {
+        doctors = doctors.filter((d) => d.location === params.location);
+      }
+      if (params?.specialty) {
+        doctors = doctors.filter((d) => d.specialty === params.specialty);
+      }
+      return doctors;
+    },
+    
     createDoctor: async (payload: any) => {
       await delay();
       return {
@@ -109,19 +123,97 @@ export const mockHandlers = {
           address: payload.address,
           phone: payload.phone,
           qualifications: payload.qualifications,
+          specialty: payload.specialty,
         },
       };
     },
+    
+    // Admin Management (Super Admin only)
+    listAdmins: async () => {
+      await delay();
+      const admins = mockUsers.filter((u) => u.role === "admin");
+      return { admins, total: admins.length };
+    },
+    
+    createAdmin: async (payload: any) => {
+      await delay();
+      const newAdmin = {
+        id: `adm-${Date.now()}`,
+        name: payload.name,
+        email: payload.email,
+        role: "admin" as const,
+        location: payload.location,
+        state: payload.state,
+        address: payload.address || "",
+        phone: payload.phone,
+      };
+      return newAdmin;
+    },
+    
+    toggleAdminStatus: async (id: string) => {
+      await delay();
+      const admin = mockUsers.find((u) => u.id === id);
+      const newStatus = !admin; // Simplified toggle logic
+      return {
+        success: true,
+        isActive: newStatus,
+        message: newStatus ? "Admin activated successfully" : "Admin deactivated successfully",
+      };
+    },
+    
+    changeAdminPassword: async (id: string, newPassword: string) => {
+      await delay();
+      return {
+        success: true,
+        message: "Password updated successfully",
+      };
+    },
+    
+    deleteAdmin: async (id: string) => {
+      await delay();
+      return {
+        success: true,
+        message: "Admin removed successfully",
+      };
+    },
+    
+    // User Management
+    listUsers: async (params?: { role?: string; location?: string }) => {
+      await delay();
+      let users = [...mockUsers];
+      if (params?.role) {
+        users = users.filter((u) => u.role === params.role);
+      }
+      if (params?.location) {
+        users = users.filter((u) => u.location === params.location);
+      }
+      return users;
+    },
+    
+    toggleUserStatus: async (id: string) => {
+      await delay();
+      const user = mockUsers.find((u) => u.id === id);
+      const newStatus = !user; // Simplified toggle logic
+      return {
+        success: true,
+        isActive: newStatus,
+        message: newStatus ? "User activated successfully" : "User deactivated successfully",
+      };
+    },
+    
+    // Services Management
     listServices: async () => {
       await delay();
       return [...mockServices];
     },
+    
     createService: async (payload: any) => {
       await delay();
       const svc = { ...payload, id: `svc-${Date.now()}`, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
       mockServices.push(svc);
       return svc;
     },
+    
     updateService: async (id: string, payload: any) => {
       await delay();
       const index = mockServices.findIndex((s) => s.id === id);
@@ -131,16 +223,20 @@ export const mockHandlers = {
       }
       throw new Error("Service not found");
     },
+    
     deleteService: async (id: string) => {
       await delay();
       const index = mockServices.findIndex((s) => s.id === id);
       if (index !== -1) mockServices.splice(index, 1);
       return { success: true };
     },
+    
+    // Statistics Management
     listStatistics: async () => {
       await delay();
       return [...mockStatistics];
     },
+    
     updateStatistics: async (stats: typeof mockStatistics) => {
       await delay();
       mockStatistics.splice(0, mockStatistics.length, ...stats.map((s) => ({ ...s })));
