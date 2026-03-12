@@ -6,6 +6,7 @@ import {
   mockResults,
   mockUsers,
   mockDoctorAvailability,
+  mockServices,
 } from "@/lib/mocks/data";
 
 const delay = async (ms = 320) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -109,6 +110,31 @@ export const mockHandlers = {
           qualifications: payload.qualifications,
         },
       };
+    },
+    listServices: async () => {
+      await delay();
+      return [...mockServices];
+    },
+    createService: async (payload: any) => {
+      await delay();
+      const svc = { ...payload, id: `svc-${Date.now()}`, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+      mockServices.push(svc);
+      return svc;
+    },
+    updateService: async (id: string, payload: any) => {
+      await delay();
+      const index = mockServices.findIndex((s) => s.id === id);
+      if (index !== -1) {
+        mockServices[index] = { ...mockServices[index], ...payload, updatedAt: new Date().toISOString() };
+        return mockServices[index];
+      }
+      throw new Error("Service not found");
+    },
+    deleteService: async (id: string) => {
+      await delay();
+      const index = mockServices.findIndex((s) => s.id === id);
+      if (index !== -1) mockServices.splice(index, 1);
+      return { success: true };
     },
   },
   doctors: {

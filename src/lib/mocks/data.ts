@@ -6,6 +6,7 @@ import type {
   Message,
   User,
   DoctorAvailability,
+  Service,
 } from "@/types";
 
 export const mockUsers: User[] = [
@@ -396,5 +397,59 @@ export const mockDoctorAvailability: DoctorAvailability[] = [
       { date: "2026-03-13", time: "09:00" },
       { date: "2026-03-13", time: "10:00" },
     ],
+  },
+];
+
+export const mockServices: Service[] = [
+  {
+    id: "svc-1",
+    name: "Accident & Emergency Services",
+    category: "Emergency Services",
+    shortDescription: "24/7 rapid expert care for all medical and surgical emergencies",
+    fullDescription: "Our Accident & Emergency department provides round-the-clock expert care for life-threatening and urgent medical conditions. Our team of highly trained emergency physicians, nurses, and support staff are equipped with state-of-the-art resuscitation equipment to handle all categories of emergencies swiftly and effectively.",
+    bannerImageUrl: undefined,
+    iconImageUrl: undefined,
+    keyServices: [
+      { id: "ks-1-1", title: "Trauma Care", description: "Immediate treatment for physical injuries and trauma" },
+      { id: "ks-1-2", title: "Resuscitation", description: "Advanced cardiac and respiratory life support" },
+      { id: "ks-1-3", title: "Triage", description: "Systematic patient assessment and prioritisation" },
+      { id: "ks-1-4", title: "Critical Monitoring", description: "Continuous vital signs monitoring for critical patients" },
+    ],
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+  },
+  {
+    id: "svc-2",
+    name: "Cardiology Services",
+    category: "Specialized Care",
+    shortDescription: "Comprehensive cardiac care combining advanced technology with expert medical attention",
+    fullDescription: "Our cardiology department offers comprehensive cardiovascular care using cutting-edge diagnostic equipment and treatment protocols. From routine ECGs to complex interventional procedures, our cardiologists are committed to keeping your heart healthy.",
+    bannerImageUrl: undefined,
+    iconImageUrl: undefined,
+    keyServices: [
+      { id: "ks-2-1", title: "ECG & Echocardiography", description: "Non-invasive cardiac imaging and electrical monitoring" },
+      { id: "ks-2-2", title: "Cardiac Stress Testing", description: "Evaluate heart performance under controlled exercise" },
+      { id: "ks-2-3", title: "Hypertension Management", description: "Long-term blood pressure monitoring and treatment" },
+      { id: "ks-2-4", title: "Heart Failure Clinic", description: "Specialised outpatient care for heart failure patients" },
+    ],
+    createdAt: "2026-01-02T00:00:00.000Z",
+    updatedAt: "2026-01-02T00:00:00.000Z",
+  },
+  {
+    id: "svc-3",
+    name: "Dental Services",
+    category: "Dental Care",
+    shortDescription: "Complete oral care for patients of all ages",
+    fullDescription: "Our dental clinic provides a full range of oral health services for patients of all ages, from preventive care and routine check-ups to complex restorative and cosmetic procedures. Our dentists use modern equipment and techniques to ensure your comfort at every visit.",
+    bannerImageUrl: undefined,
+    iconImageUrl: undefined,
+    keyServices: [
+      { id: "ks-3-1", title: "Preventive Dentistry", description: "Scaling, polishing, and oral hygiene education" },
+      { id: "ks-3-2", title: "Restorative Dentistry", description: "Fillings, crowns, bridges, and dentures" },
+      { id: "ks-3-3", title: "Orthodontics", description: "Braces and aligners for teeth straightening" },
+      { id: "ks-3-4", title: "Oral Surgery", description: "Tooth extractions and minor oral surgical procedures" },
+    ],
+    createdAt: "2026-01-03T00:00:00.000Z",
+    updatedAt: "2026-01-03T00:00:00.000Z",
   },
 ];

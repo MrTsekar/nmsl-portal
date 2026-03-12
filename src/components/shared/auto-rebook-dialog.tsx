@@ -119,8 +119,8 @@ export function AutoRebookDialog({
                     key={doctor.id}
                     className={`cursor-pointer transition-all ${
                       selectedDoctor === doctor.id
-                        ? "ring-2 ring-cyan-500 bg-cyan-50/50 dark:bg-cyan-950/20"
-                        : "hover:border-cyan-300 dark:hover:border-cyan-700"
+                        ? "ring-2 ring-green-500 bg-green-50/50 dark:bg-green-950/20"
+                        : "hover:border-green-300 dark:hover:border-green-700"
                     }`}
                     onClick={() => setSelectedDoctor(doctor.id)}
                   >
@@ -135,7 +135,7 @@ export function AutoRebookDialog({
                         </div>
                         {selectedDoctor === doctor.id && (
                           <div className="flex-shrink-0">
-                            <div className="h-6 w-6 rounded-full bg-cyan-500 flex items-center justify-center">
+                            <div className="h-6 w-6 rounded-full bg-green-500 flex items-center justify-center">
                               <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                               </svg>
@@ -161,8 +161,8 @@ export function AutoRebookDialog({
                     onClick={() => setSelectedSlot(slot)}
                     className={`p-3 rounded-lg border text-left text-sm transition-all ${
                       selectedSlot === slot
-                        ? "border-cyan-500 bg-cyan-50 dark:bg-cyan-950/20 font-medium"
-                        : "border-border hover:border-cyan-300 dark:hover:border-cyan-700"
+                        ? "border-green-500 bg-green-50 dark:bg-green-950/20 font-medium"
+                        : "border-border hover:border-green-300 dark:hover:border-green-700"
                     }`}
                   >
                     <div className="flex items-center gap-2">
@@ -180,7 +180,7 @@ export function AutoRebookDialog({
             <Button
               onClick={handleRebook}
               disabled={!selectedDoctor || !selectedSlot}
-              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
+              className="bg-gradient-to-r from-green-500 to-lime-600 hover:from-green-600 hover:to-lime-700"
             >
               Confirm Rebooking
             </Button>

@@ -14,7 +14,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const premiumTheme = useUiStore((state) => state.premiumTheme);
-  const companyLogoUrl = useUiStore((state) => state.companyLogoUrl);
 
   return (
     <div className={cn("flex min-h-screen", premiumTheme && "premium-theme")}>
@@ -31,12 +30,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <SheetContent className="right-auto left-0 w-[85vw] max-w-xs border-r border-l-0 p-4">
           <SheetTitle className="sr-only">Mobile navigation menu</SheetTitle>
           <div className="mb-4 flex items-center gap-2">
-            {companyLogoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={companyLogoUrl} alt="Company logo" className="h-6 w-6 rounded object-contain" />
-            ) : (
-              <Hospital className="h-5 w-5 text-primary" />
-            )}
+            <div className="p-1.5 rounded-lg bg-gradient-to-br from-green-500 to-lime-600">
+              <Hospital className="h-4 w-4 text-white" />
+            </div>
             <span className="font-semibold">NMSL App</span>
           </div>
           <AppSidebarNav collapsed={false} onNavigate={() => setMobileMenuOpen(false)} />

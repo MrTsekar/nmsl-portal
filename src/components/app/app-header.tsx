@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Bell, Menu, Moon, Search, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -115,6 +115,7 @@ export function AppHeader({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void 
           <DropdownMenuTrigger asChild>
             <button type="button" className="inline-flex">
               <Avatar>
+                {user?.avatar ? <AvatarImage src={user.avatar} alt={user.name} /> : null}
                 <AvatarFallback>{user?.name?.slice(0, 2).toUpperCase() ?? "NA"}</AvatarFallback>
               </Avatar>
             </button>

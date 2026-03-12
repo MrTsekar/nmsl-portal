@@ -23,9 +23,9 @@ export function ChatWindow({
     <div className="grid gap-4 lg:grid-cols-[300px_1fr]">
       {/* Conversations Sidebar */}
       <Card className="hidden lg:block border-slate-200 dark:border-slate-800 shadow-lg">
-        <CardHeader className="pb-3 bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-slate-800 dark:to-blue-950/30 border-b border-slate-200 dark:border-slate-700">
+        <CardHeader className="pb-3 bg-gradient-to-br from-green-50 to-lime-50 dark:from-slate-800 dark:to-green-950/30 border-b border-slate-200 dark:border-slate-700">
           <div className="flex items-center gap-2">
-            <MessageCircle className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+            <MessageCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
             <h3 className="font-semibold text-slate-800 dark:text-slate-200">Conversations</h3>
           </div>
         </CardHeader>
@@ -41,7 +41,7 @@ export function ChatWindow({
                   onClick={() => setActiveId(conversation.id)}
                   className={`w-full rounded-xl p-3 text-left transition-all duration-200 ${
                     isActive 
-                      ? "bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-md" 
+                      ? "bg-gradient-to-br from-green-500 to-lime-600 text-white shadow-md" 
                       : "border border-transparent hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-slate-200 dark:hover:border-slate-700"
                   }`}
                 >
@@ -49,7 +49,7 @@ export function ChatWindow({
                     <Avatar className={`h-10 w-10 border-2 ${
                       isActive ? "border-white" : "border-slate-200 dark:border-slate-700"
                     }`}>
-                      <AvatarFallback className={isActive ? "bg-white/20 text-white" : "bg-gradient-to-br from-cyan-100 to-blue-100 dark:from-cyan-900 dark:to-blue-900 text-cyan-700 dark:text-cyan-300"}>
+                      <AvatarFallback className={isActive ? "bg-white/20 text-white" : "bg-gradient-to-br from-green-100 to-lime-100 dark:from-green-900 dark:to-lime-900 text-green-700 dark:text-green-300"}>
                         {initials}
                       </AvatarFallback>
                     </Avatar>
@@ -81,13 +81,13 @@ export function ChatWindow({
 
       {/* Chat Area */}
       <Card className="border-slate-200 dark:border-slate-800 shadow-lg">
-        <CardHeader className="pb-3 bg-gradient-to-br from-slate-50 to-blue-50/30 dark:from-slate-800 dark:to-blue-950/30 border-b border-slate-200 dark:border-slate-700">
+        <CardHeader className="pb-3 bg-gradient-to-br from-slate-50 to-green-50/30 dark:from-slate-800 dark:to-green-950/30 border-b border-slate-200 dark:border-slate-700">
           {activeConversation && (() => {
             const initials = activeConversation.title.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
             return (
               <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10 sm:h-12 sm:w-12 border-2 border-cyan-200 dark:border-cyan-800">
-                  <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white font-semibold">
+                <Avatar className="h-10 w-10 sm:h-12 sm:w-12 border-2 border-green-200 dark:border-green-800">
+                  <AvatarFallback className="bg-gradient-to-br from-green-500 to-lime-600 text-white font-semibold">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
@@ -121,7 +121,7 @@ export function ChatWindow({
                   )}
                   <div className={`max-w-[85%] sm:max-w-[70%] rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 shadow-md ${
                     isOwn 
-                      ? "bg-gradient-to-br from-cyan-500 to-blue-600 text-white rounded-br-sm" 
+                      ? "bg-gradient-to-br from-green-500 to-lime-600 text-white rounded-br-sm" 
                       : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-bl-sm"
                   }`}>
                     <p className={`text-xs sm:text-sm leading-relaxed ${
@@ -135,8 +135,8 @@ export function ChatWindow({
                     </div>
                   </div>
                   {isOwn && (
-                    <Avatar className="h-8 w-8 flex-shrink-0 border-2 border-cyan-200 dark:border-cyan-800">
-                      <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white text-xs font-semibold">
+                    <Avatar className="h-8 w-8 flex-shrink-0 border-2 border-green-200 dark:border-green-800">
+                      <AvatarFallback className="bg-gradient-to-br from-green-500 to-lime-600 text-white text-xs font-semibold">
                         You
                       </AvatarFallback>
                     </Avatar>
@@ -151,11 +151,11 @@ export function ChatWindow({
             <div className="flex items-center gap-2">
               <Input 
                 placeholder="Type a message..." 
-                className="flex-1 border-slate-300 dark:border-slate-600 focus:border-cyan-500 dark:focus:border-cyan-500 rounded-xl text-sm"
+                className="flex-1 border-slate-300 dark:border-slate-600 focus:border-green-500 dark:focus:border-green-500 rounded-xl text-sm"
               />
               <Button 
                 size="sm" 
-                className="bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-md rounded-xl px-4 sm:px-6"
+                className="bg-gradient-to-br from-green-500 to-lime-600 hover:from-green-600 hover:to-lime-700 text-white shadow-md rounded-xl px-4 sm:px-6"
               >
                 <Send className="h-4 w-4 mr-1 sm:mr-2" />
                 <span className="hidden sm:inline">Send</span>

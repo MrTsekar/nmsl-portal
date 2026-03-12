@@ -16,9 +16,9 @@ interface NotificationBannerProps {
 
 const notificationStyles: Record<NotificationType, { bg: string; border: string; icon: React.ReactNode }> = {
   info: {
-    bg: "bg-blue-50 dark:bg-blue-950/20",
-    border: "border-blue-200 dark:border-blue-800",
-    icon: <Info className="h-5 w-5 text-blue-600 dark:text-blue-400" />,
+    bg: "bg-green-50 dark:bg-green-950/20",
+    border: "border-green-200 dark:border-green-800",
+    icon: <Info className="h-5 w-5 text-green-600 dark:text-green-400" />,
   },
   success: {
     bg: "bg-green-50 dark:bg-green-950/20",

@@ -9,15 +9,17 @@ interface Column<T> {
 export function DataTable<T extends object>({
   columns,
   data,
+  rowClassName,
 }: {
   columns: Column<T>[];
   data: T[];
+  rowClassName?: (row: T) => string | undefined;
 }) {
   return (
     <div className="rounded-xl border border-slate-200/50 dark:border-slate-800/50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm shadow-md overflow-x-auto">
       <Table>
         <TableHeader>
-          <TableRow className="bg-gradient-to-r from-slate-50 to-blue-50/30 dark:from-slate-800 dark:to-blue-950/20 border-b border-slate-200 dark:border-slate-800">
+          <TableRow className="bg-gradient-to-r from-slate-50 to-green-50/30 dark:from-slate-800 dark:to-green-950/20 border-b border-slate-200 dark:border-slate-800">
             {columns.map((column) => (
               <TableHead key={column.key.toString()} className="font-semibold text-xs sm:text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap">{column.header}</TableHead>
             ))}
@@ -25,7 +27,7 @@ export function DataTable<T extends object>({
         </TableHeader>
         <TableBody>
           {data.map((row, index) => (
-            <TableRow key={index} className="hover:bg-blue-50/50 dark:hover:bg-blue-950/20 transition-colors">
+            <TableRow key={index} className={`hover:bg-green-50/50 dark:hover:bg-green-950/20 transition-colors ${rowClassName?.(row) ?? ""}`}>
               {columns.map((column) => (
                 <TableCell key={column.key.toString()} className="text-xs sm:text-sm">
                   {column.render ? column.render(row) : String(row[column.key as keyof T] ?? "-")}

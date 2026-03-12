@@ -226,8 +226,8 @@ export default function AppointmentsPage() {
     <div className="space-y-4 sm:space-y-6">
       <PageHeader title="Appointments" subtitle="List, filter, and inspect appointment workflows" />
       
-      {/* Admin/Doctor notification for conflicted appointments */}
-      {(user?.role === "admin" || user?.role === "doctor") && mockConflictedAppointmentIds.length > 0 && (
+      {/* Admin notification for conflicted appointments - doctor doesn't need this, they triggered the unavailability */}
+      {user?.role === "admin" && mockConflictedAppointmentIds.length > 0 && (
         <NotificationBanner
           type="error"
           title="🚨 Appointments Require Rebooking"
@@ -465,9 +465,23 @@ export default function AppointmentsPage() {
           <div className="hidden lg:block">
             <DataTable
               data={rows}
+              rowClassName={(row) => isAppointmentConflicted(row.id) ? "border-l-4 border-l-red-500 bg-red-50/40 dark:bg-red-950/20" : undefined}
               columns={[
                 { key: "id", header: "ID" },
-                { key: "patientName", header: "Patient" },
+                {
+                  key: "patientName",
+                  header: "Patient",
+                  render: (row) => (
+                    <div className="flex items-center gap-2">
+                      <span>{row.patientName}</span>
+                      {isAppointmentConflicted(row.id) && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-red-600 dark:text-red-400">
+                          <AlertTriangle className="h-3 w-3" /> Needs rebooking
+                        </span>
+                      )}
+                    </div>
+                  ),
+                },
                 { key: "doctorName", header: "Doctor" },
                 { key: "date", header: "Date" },
                 {
@@ -485,10 +499,20 @@ export default function AppointmentsPage() {
                         View details
                       </Link>
                       {user?.role === "admin" ? (
-                        <>
-                          <Button variant="outline" size="sm" onClick={() => setWorkflowStatus(row.id, "confirmed")}>Approve</Button>
-                          <Button variant="outline" size="sm" onClick={() => handleReschedule(row)}>Reschedule</Button>
-                        </>
+                        isAppointmentConflicted(row.id) ? (
+                          <Button
+                            size="sm"
+                            className="bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white font-semibold"
+                            onClick={() => handleRebookAppointment(row)}
+                          >
+                            <AlertTriangle className="h-3 w-3 mr-1" /> Rebook Now
+                          </Button>
+                        ) : (
+                          <>
+                            <Button variant="outline" size="sm" onClick={() => setWorkflowStatus(row.id, "confirmed")}>Approve</Button>
+                            <Button variant="outline" size="sm" onClick={() => handleReschedule(row)}>Reschedule</Button>
+                          </>
+                        )
                       ) : user?.role === "doctor" ? (
                         <>
                           <Button variant="outline" size="sm" onClick={() => handleDoctorActions(row)}>Manage</Button>

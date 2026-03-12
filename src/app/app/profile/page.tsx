@@ -126,11 +126,11 @@ export default function ProfilePage() {
       <SectionCard title="Account details">
         <div className="grid gap-6 md:grid-cols-[260px_1fr]">
           {/* Avatar Section with Gradient Background */}
-          <div className="flex flex-col items-center space-y-4 p-6 rounded-2xl bg-gradient-to-br from-cyan-50 via-blue-50 to-purple-50 dark:from-slate-800 dark:via-blue-950/50 dark:to-purple-950/30 border border-cyan-100 dark:border-cyan-900/50 shadow-lg">
+          <div className="flex flex-col items-center space-y-4 p-6 rounded-2xl bg-gradient-to-br from-green-50 via-lime-50 to-yellow-50 dark:from-slate-800 dark:via-green-950/50 dark:to-lime-950/30 border border-green-100 dark:border-green-900/50 shadow-lg">
             <div className="relative">
-              <Avatar className="h-28 w-28 sm:h-32 sm:w-32 border-4 border-white dark:border-slate-700 shadow-xl ring-4 ring-cyan-100 dark:ring-cyan-900/50">
+              <Avatar className="h-28 w-28 sm:h-32 sm:w-32 border-4 border-white dark:border-slate-700 shadow-xl ring-4 ring-green-100 dark:ring-green-900/50">
                 {displayAvatar ? <AvatarImage src={displayAvatar} alt="Profile avatar" /> : null}
-                <AvatarFallback className="text-2xl sm:text-3xl font-bold bg-gradient-to-br from-cyan-500 to-blue-600 text-white">
+                <AvatarFallback className="text-2xl sm:text-3xl font-bold bg-gradient-to-br from-green-500 to-lime-600 text-white">
                   {initials}
                 </AvatarFallback>
               </Avatar>
@@ -141,13 +141,13 @@ export default function ProfilePage() {
                 </span>
               </div>
             </div>
-            <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 px-4 py-2.5 text-sm font-medium text-white shadow-md hover:shadow-lg transition-all duration-200">
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-lime-600 hover:from-green-600 hover:to-lime-700 px-4 py-2.5 text-sm font-medium text-white shadow-md hover:shadow-lg transition-all duration-200">
               <Camera className="h-4 w-4" />
               Upload image
               <input type="file" accept="image/*" className="hidden" onChange={onUploadAvatar} />
             </label>
             <div className="text-center">
-              <Badge variant="secondary" className="capitalize font-semibold px-3 py-1 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border-cyan-200 dark:border-cyan-800 text-cyan-700 dark:text-cyan-300">
+              <Badge variant="secondary" className="capitalize font-semibold px-3 py-1 bg-gradient-to-r from-green-500/10 to-lime-500/10 border-green-200 dark:border-green-800 text-green-700 dark:text-green-300">
                 {user?.role ?? "patient"}
               </Badge>
             </div>
@@ -156,37 +156,37 @@ export default function ProfilePage() {
           {/* Info Grid with Better Styling */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
-              <Label className="text-xs font-semibold text-cyan-600 dark:text-cyan-400 uppercase tracking-wide">User ID</Label>
+              <Label className="text-xs font-semibold text-green-600 dark:text-green-400 uppercase tracking-wide">User ID</Label>
               <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-100">{user?.id ?? "-"}</p>
             </div>
             <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
-              <Label className="text-xs font-semibold text-cyan-600 dark:text-cyan-400 uppercase tracking-wide">ID Number</Label>
+              <Label className="text-xs font-semibold text-green-600 dark:text-green-400 uppercase tracking-wide">ID Number</Label>
               <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-100">{user?.idNumber ?? "Not set"}</p>
             </div>
             {user?.role === "doctor" ? (
-              <div className="sm:col-span-2 p-4 rounded-xl bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-cyan-950/20 dark:to-blue-950/20 border border-cyan-200 dark:border-cyan-800">
-                <Label className="text-xs font-semibold text-cyan-600 dark:text-cyan-400 uppercase tracking-wide">Qualifications</Label>
+              <div className="sm:col-span-2 p-4 rounded-xl bg-gradient-to-br from-green-50 to-lime-50 dark:from-green-950/20 dark:to-lime-950/20 border border-green-200 dark:border-green-800">
+                <Label className="text-xs font-semibold text-green-600 dark:text-green-400 uppercase tracking-wide">Qualifications</Label>
                 <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-100">{user?.qualifications ?? "Not set"}</p>
               </div>
             ) : null}
             <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
-              <Label className="text-xs font-semibold text-cyan-600 dark:text-cyan-400 uppercase tracking-wide">Location</Label>
+              <Label className="text-xs font-semibold text-green-600 dark:text-green-400 uppercase tracking-wide">Location</Label>
               <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-100">{user?.location ?? "-"}</p>
             </div>
             <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
-              <Label className="text-xs font-semibold text-cyan-600 dark:text-cyan-400 uppercase tracking-wide">State</Label>
+              <Label className="text-xs font-semibold text-green-600 dark:text-green-400 uppercase tracking-wide">State</Label>
               <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-100">{user?.state ?? "-"}</p>
             </div>
             <div className="sm:col-span-2 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
-              <Label className="text-xs font-semibold text-cyan-600 dark:text-cyan-400 uppercase tracking-wide">Address</Label>
+              <Label className="text-xs font-semibold text-green-600 dark:text-green-400 uppercase tracking-wide">Address</Label>
               <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-100">{user?.address ?? "-"}</p>
             </div>
             <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
-              <Label className="text-xs font-semibold text-cyan-600 dark:text-cyan-400 uppercase tracking-wide">Emergency contact</Label>
+              <Label className="text-xs font-semibold text-green-600 dark:text-green-400 uppercase tracking-wide">Emergency contact</Label>
               <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-100">{user?.emergencyContactName ?? "-"}</p>
             </div>
             <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
-              <Label className="text-xs font-semibold text-cyan-600 dark:text-cyan-400 uppercase tracking-wide">Emergency phone</Label>
+              <Label className="text-xs font-semibold text-green-600 dark:text-green-400 uppercase tracking-wide">Emergency phone</Label>
               <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-100">{user?.emergencyContactPhone ?? "-"}</p>
             </div>
           </div>
@@ -195,8 +195,8 @@ export default function ProfilePage() {
 
       <SectionCard title="Personal information">
         <form onSubmit={profileForm.handleSubmit(onSubmitProfile)} className="space-y-4">
-          <div className="rounded-xl border-2 border-dashed border-cyan-200 dark:border-cyan-800 bg-cyan-50/50 dark:bg-cyan-950/20 p-4">
-            <p className="text-xs sm:text-sm text-cyan-700 dark:text-cyan-300 font-medium">
+          <div className="rounded-xl border-2 border-dashed border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/20 p-4">
+            <p className="text-xs sm:text-sm text-green-700 dark:text-green-300 font-medium">
               🔒 Verified fields (email, phone number, date of birth, state, and registration location) are captured during sign-up and cannot be edited here.
             </p>
           </div>
@@ -257,7 +257,7 @@ export default function ProfilePage() {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <Button type="submit" className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-md">
+            <Button type="submit" className="bg-gradient-to-r from-green-500 to-lime-600 hover:from-green-600 hover:to-lime-700 text-white shadow-md">
               <Save className="mr-2 h-4 w-4" /> Save changes
             </Button>
             {profileSaved ? (

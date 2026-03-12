@@ -11,6 +11,7 @@ import {
   TestTube,
   UserRound,
   Users,
+  Briefcase,
 } from "lucide-react";
 import type { ComponentType } from "react";
 import type { Role } from "@/types";
@@ -29,12 +30,13 @@ export const navItems: NavItem[] = [
   { label: "Medical Results", href: "/app/patient/medical-results", icon: FileHeart, roles: ["patient"] },
   { label: "My Prescriptions", href: "/app/patient/prescriptions", icon: TestTube, roles: ["patient"] },
   { label: "My Doctors", href: "/app/patient/doctors", icon: Stethoscope, roles: ["patient"] },
-  { label: "Doctor Schedule", href: "/app/doctor/schedule", icon: ClipboardPlus, roles: ["doctor"] },
-  { label: "Doctor Patients", href: "/app/doctor/patients", icon: Users, roles: ["doctor"] },
+  { label: "Schedule", href: "/app/doctor/schedule", icon: ClipboardPlus, roles: ["doctor"] },
+  { label: "Patients", href: "/app/doctor/patients", icon: Users, roles: ["doctor"] },
   { label: "Prescriptions", href: "/app/doctor/prescriptions", icon: TestTube, roles: ["doctor"] },
   { label: "Chat", href: "/app/chat", icon: MessageSquare, roles: ["patient", "doctor"] },
   { label: "Users", href: "/app/admin/users", icon: Users, roles: ["admin"] },
   { label: "Doctors", href: "/app/admin/doctors", icon: BookUser, roles: ["admin"] },
+  { label: "Services", href: "/app/admin/services", icon: Briefcase, roles: ["admin"] },
   { label: "Testimonials", href: "/app/admin/testimonials", icon: Quote, roles: ["admin"] },
   { label: "Profile", href: "/app/profile", icon: UserRound, roles: ["patient", "doctor", "admin"] },
   { label: "Admin Settings", href: "/app/admin/settings", icon: Settings, roles: ["admin"] },

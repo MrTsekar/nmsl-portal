@@ -131,3 +131,34 @@ export interface DoctorAvailability {
     time: string; // HH:MM
   }>;
 }
+
+export interface KeyService {
+  id: string;
+  title: string;
+  description: string;
+}
+
+export type ServiceCategory =
+  | "Emergency Services"
+  | "Specialized Care"
+  | "Dental Care"
+  | "Primary Care"
+  | "Surgical Services"
+  | "Diagnostic Services"
+  | "Women's Health"
+  | "Pediatric Care"
+  | "Mental Health"
+  | "Rehabilitation";
+
+export interface Service {
+  id: string;
+  name: string;
+  category: ServiceCategory;
+  shortDescription: string;
+  fullDescription: string;
+  bannerImageUrl?: string;
+  iconImageUrl?: string;
+  keyServices: KeyService[];
+  createdAt: string;
+  updatedAt: string;
+}

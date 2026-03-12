@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ImagePlus, Trash2 } from "lucide-react";
+import { Camera } from "lucide-react";
 import { DataTable } from "@/components/shared/data-table";
 import { PageHeader } from "@/components/shared/page-header";
 import { SectionCard } from "@/components/shared/section-card";
@@ -9,60 +9,59 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { mockResults } from "@/lib/mocks/data";
-import { useUiStore } from "@/store/ui-store";
+import { useAuthStore } from "@/store/auth-store";
 
 export default function AdminSettingsPage() {
-  const companyLogoUrl = useUiStore((state) => state.companyLogoUrl);
-  const setCompanyLogoUrl = useUiStore((state) => state.setCompanyLogoUrl);
-  const [preview, setPreview] = useState<string | null>(companyLogoUrl);
+  const { user, updateUser } = useAuthStore();
+  const [avatarPreview, setAvatarPreview] = useState<string | undefined>(undefined);
   const [announcement, setAnnouncement] = useState("Routine maintenance every Sunday at 01:00 AM.");
   const [announcementSaved, setAnnouncementSaved] = useState(false);
 
   useEffect(() => {
-    setPreview(companyLogoUrl);
-  }, [companyLogoUrl]);
+    return () => {
+      if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    };
+  }, [avatarPreview]);
 
-  const onUploadLogo = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const displayAvatar = avatarPreview ?? user?.avatar;
+  const initials = user?.name?.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) ?? "AD";
+
+  const onUploadAvatar = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = typeof reader.result === "string" ? reader.result : null;
-      if (!result) return;
-      setPreview(result);
-      setCompanyLogoUrl(result);
-    };
-    reader.readAsDataURL(file);
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    const preview = URL.createObjectURL(file);
+    setAvatarPreview(preview);
+    updateUser({ avatar: preview });
   };
 
   return (
     <div className="space-y-4 sm:space-y-6">
       <PageHeader title="Admin Settings" subtitle="System-level controls and operational defaults" />
 
-      <SectionCard title="Branding">
-        <div className="grid gap-4 sm:gap-5 md:grid-cols-[180px_1fr]">
-          <div className="flex h-28 w-full sm:w-40 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/30">
-            {preview ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={preview} alt="Company logo preview" className="max-h-24 w-auto object-contain" />
-            ) : (
-              <span className="text-xs text-muted-foreground">No logo uploaded</span>
-            )}
+      <SectionCard title="Admin profile">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
+          <div className="relative flex-shrink-0">
+            <Avatar className="h-24 w-24 border-4 border-white dark:border-slate-700 shadow-xl ring-4 ring-green-100 dark:ring-green-900/50">
+              {displayAvatar ? <AvatarImage src={displayAvatar} alt="Admin avatar" /> : null}
+              <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-green-500 to-lime-600 text-white">{initials}</AvatarFallback>
+            </Avatar>
           </div>
-          <div className="space-y-3">
-            <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm hover:bg-muted">
-              <ImagePlus className="h-4 w-4" />
-              Upload company logo
-              <input type="file" accept="image/*" className="hidden" onChange={onUploadLogo} />
-            </label>
-            <div>
-              <Button variant="outline" size="sm" onClick={() => { setPreview(null); setCompanyLogoUrl(null); }}>
-                <Trash2 className="mr-2 h-4 w-4" /> Remove logo
-              </Button>
+          <div className="flex flex-col items-center sm:items-start gap-3">
+            <div className="text-center sm:text-left">
+              <p className="font-semibold text-base text-slate-900 dark:text-slate-100">{user?.name ?? "Admin"}</p>
+              <p className="text-sm text-muted-foreground">{user?.email ?? ""}</p>
+              <Badge variant="secondary" className="mt-1 capitalize">{user?.role ?? "admin"}</Badge>
             </div>
-            <p className="text-xs text-muted-foreground">Recommended: PNG/SVG, transparent background, square or horizontal lockup.</p>
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-lime-600 hover:from-green-600 hover:to-lime-700 px-4 py-2 text-sm font-medium text-white shadow-md hover:shadow-lg transition-all duration-200">
+              <Camera className="h-4 w-4" />
+              Change profile photo
+              <input type="file" accept="image/*" className="hidden" onChange={onUploadAvatar} />
+            </label>
+            <p className="text-xs text-muted-foreground">PNG or JPG. Your photo appears in the sidebar and header.</p>
           </div>
         </div>
       </SectionCard>

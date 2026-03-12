@@ -40,13 +40,13 @@ export function AppMobileBottomNav() {
                 className={cn(
                   "flex flex-col items-center justify-center gap-1 py-3 text-[11px] font-medium transition-all duration-200",
                   active 
-                    ? "text-cyan-600 dark:text-cyan-400" 
+                    ? "text-green-600 dark:text-green-400" 
                     : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300",
                 )}
               >
                 <div className={cn(
                   "p-1.5 rounded-lg transition-all duration-200",
-                  active && "bg-gradient-to-br from-cyan-500/10 to-blue-500/10"
+                  active && "bg-gradient-to-br from-green-500/10 to-lime-500/10"
                 )}>
                   <Icon className="h-4 w-4" />
                 </div>
