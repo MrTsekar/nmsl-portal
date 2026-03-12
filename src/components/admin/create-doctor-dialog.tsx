@@ -18,6 +18,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { adminApi } from "@/lib/api/admin.api";
 import { NIGERIA_LOCATIONS } from "@/lib/constants/locations";
 import { NIGERIAN_STATES } from "@/lib/constants/states";
+import { useAuthStore } from "@/store/auth-store";
+import { MapPin, Lock } from "lucide-react";
 
 const LOCATION_OPTIONS = [...NIGERIA_LOCATIONS, "Other"] as const;
 
@@ -67,6 +69,10 @@ interface CreateDoctorDialogProps {
 export function CreateDoctorDialog({ open, onOpenChange, onSuccess }: CreateDoctorDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuthStore();
+  const isSuperAdmin = user?.role === "super_admin";
+  const lockedLocation = isSuperAdmin ? undefined : (user?.location as FormValues["location"] | undefined);
+  const lockedState = isSuperAdmin ? undefined : user?.state;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -77,8 +83,8 @@ export function CreateDoctorDialog({ open, onOpenChange, onSuccess }: CreateDoct
       phone: "",
       qualifications: "",
       specialty: "General Practice",
-      location: "Abuja",
-      state: "FCT",
+      location: lockedLocation ?? "Abuja",
+      state: lockedState ?? "FCT",
       address: "",
     },
   });
@@ -111,6 +117,113 @@ export function CreateDoctorDialog({ open, onOpenChange, onSuccess }: CreateDoct
         </DialogHeader>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+
+          {/* Location callout */}
+          {isSuperAdmin ? (
+            <div className="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 dark:border-amber-700/60 dark:bg-amber-900/20 p-3">
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+              <p className="text-sm text-amber-800 dark:text-amber-300">
+                <strong>Location is critical.</strong> As super admin, you can assign this doctor to any NMSL facility.
+              </p>
+            </div>
+          ) : (
+            <div className="flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 dark:border-green-800/50 dark:bg-green-900/20 p-3">
+              <Lock className="mt-0.5 h-4 w-4 shrink-0 text-green-600 dark:text-green-400" />
+              <p className="text-sm text-green-800 dark:text-green-300">
+                This doctor will be assigned to your facility: <strong>{lockedLocation}</strong>. Only a super admin can create doctors for other locations.
+              </p>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Location first — most important */}
+            <div className="space-y-2">
+              <Label htmlFor="location" className="text-base font-semibold flex items-center gap-1">
+                <MapPin className="h-4 w-4 text-primary" /> Facility Location *
+              </Label>
+              {isSuperAdmin ? (
+                <Select
+                  defaultValue="Abuja"
+                  onValueChange={(value) => form.setValue("location", value as FormValues["location"])}
+                  disabled={isSubmitting}
+                >
+                  <SelectTrigger id="location" className="border-primary/60 ring-1 ring-primary/30">
+                    <SelectValue placeholder="Select location" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LOCATION_OPTIONS.map((location) => (
+                      <SelectItem key={location} value={location}>
+                        {location}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  id="location"
+                  value={lockedLocation ?? ""}
+                  disabled
+                  className="bg-muted cursor-not-allowed"
+                />
+              )}
+              {form.formState.errors.location && (
+                <p className="text-sm text-destructive">{form.formState.errors.location.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="state" className="text-base font-semibold">State *</Label>
+              {!isSuperAdmin ? (
+                <Input
+                  id="state"
+                  value={lockedState ?? ""}
+                  disabled
+                  className="bg-muted cursor-not-allowed"
+                />
+              ) : selectedLocation === "Other" ? (
+                <Input
+                  id="state"
+                  placeholder="Enter state"
+                  {...form.register("state")}
+                  disabled={isSubmitting}
+                />
+              ) : (
+                <Select
+                  defaultValue="FCT"
+                  onValueChange={(value) => form.setValue("state", value)}
+                  disabled={isSubmitting}
+                >
+                  <SelectTrigger id="state" className="border-primary/60 ring-1 ring-primary/30">
+                    <SelectValue placeholder="Select state" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {NIGERIAN_STATES.map((state) => (
+                      <SelectItem key={state} value={state}>
+                        {state}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              {form.formState.errors.state && (
+                <p className="text-sm text-destructive">{form.formState.errors.state.message}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="address" className="text-base font-semibold">Facility / Practice Address *</Label>
+            <Input
+              id="address"
+              placeholder="Full address (e.g. 15 Ahmadu Bello Way, Victoria Island, Lagos)"
+              {...form.register("address")}
+              disabled={isSubmitting}
+            />
+            {form.formState.errors.address && (
+              <p className="text-sm text-destructive">{form.formState.errors.address.message}</p>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name *</Label>
@@ -206,76 +319,6 @@ export function CreateDoctorDialog({ open, onOpenChange, onSuccess }: CreateDoct
                 <p className="text-sm text-destructive">{form.formState.errors.specialty.message}</p>
               )}
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="location">Location *</Label>
-              <Select
-                defaultValue="Abuja"
-                onValueChange={(value) => form.setValue("location", value as FormValues["location"])}
-                disabled={isSubmitting}
-              >
-                <SelectTrigger id="location">
-                  <SelectValue placeholder="Select location" />
-                </SelectTrigger>
-                <SelectContent>
-                  {LOCATION_OPTIONS.map((location) => (
-                    <SelectItem key={location} value={location}>
-                      {location}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {form.formState.errors.location && (
-                <p className="text-sm text-destructive">{form.formState.errors.location.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="state">State *</Label>
-              {selectedLocation === "Other" ? (
-                <Input
-                  id="state"
-                  placeholder="Enter state"
-                  {...form.register("state")}
-                  disabled={isSubmitting}
-                />
-              ) : (
-                <Select
-                  defaultValue="FCT"
-                  onValueChange={(value) => form.setValue("state", value)}
-                  disabled={isSubmitting}
-                >
-                  <SelectTrigger id="state">
-                    <SelectValue placeholder="Select state" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {NIGERIAN_STATES.map((state) => (
-                      <SelectItem key={state} value={state}>
-                        {state}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-              {form.formState.errors.state && (
-                <p className="text-sm text-destructive">{form.formState.errors.state.message}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="address">Address *</Label>
-            <Input
-              id="address"
-              placeholder="Full address"
-              {...form.register("address")}
-              disabled={isSubmitting}
-            />
-            {form.formState.errors.address && (
-              <p className="text-sm text-destructive">{form.formState.errors.address.message}</p>
-            )}
           </div>
 
           {error && (

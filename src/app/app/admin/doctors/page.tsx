@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, Plus } from "lucide-react";
+import { Search, Plus, MapPin } from "lucide-react";
 import { DataTable } from "@/components/shared/data-table";
 import { PageHeader } from "@/components/shared/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -9,13 +9,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { CreateDoctorDialog } from "@/components/admin/create-doctor-dialog";
+import { useAuthStore } from "@/store/auth-store";
 
 const doctors = [
-  { id: "d-1", name: "Dr. Ken Wu", specialty: "Internal Medicine", qualifications: "MBBS, FMCGP", status: "Active" },
-  { id: "d-2", name: "Dr. Zahra Ali", specialty: "Cardiology", qualifications: "MBBS, FWACP", status: "Active" },
+  { id: "d-1", name: "Dr. Ken Wu", specialty: "Internal Medicine", qualifications: "MBBS, FMCGP", location: "Lagos", status: "Active" },
+  { id: "d-2", name: "Dr. Zahra Ali", specialty: "Cardiology", qualifications: "MBBS, FWACP", location: "Lagos", status: "Active" },
+  { id: "d-3", name: "Dr. Ngozi Okafor", specialty: "Gynecology", qualifications: "MBBS, FWACS", location: "Abuja", status: "Active" },
+  { id: "d-4", name: "Dr. Ahmed Bello", specialty: "Physiotherapy", qualifications: "MBBS, MSc PT", location: "Port Harcourt", status: "Active" },
+  { id: "d-5", name: "Dr. Chioma Eze", specialty: "Pediatrics", qualifications: "MBBS, MWACP", location: "Lagos", status: "Active" },
 ];
 
 export default function AdminDoctorsPage() {
+  const { user } = useAuthStore();
+  const isSuperAdmin = user?.role === "super_admin";
+  const adminLocation = user?.location ?? "";
+
   const [availability, setAvailability] = useState<Record<string, boolean>>({});
   const [deactivatedIds, setDeactivatedIds] = useState<string[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -23,15 +31,17 @@ export default function AdminDoctorsPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const rows = useMemo(() => {
-    const allDoctors = doctors.map((doctor) => ({
+    const filtered = isSuperAdmin
+      ? doctors
+      : doctors.filter((d) => d.location === adminLocation);
+
+    const allDoctors = filtered.map((doctor) => ({
       ...doctor,
       available: availability[doctor.id] ?? true,
       active: !deactivatedIds.includes(doctor.id),
     }));
 
-    if (!searchQuery.trim()) {
-      return allDoctors;
-    }
+    if (!searchQuery.trim()) return allDoctors;
 
     const query = searchQuery.toLowerCase();
     return allDoctors.filter(
@@ -39,9 +49,10 @@ export default function AdminDoctorsPage() {
         doctor.name.toLowerCase().includes(query) ||
         doctor.specialty.toLowerCase().includes(query) ||
         doctor.qualifications.toLowerCase().includes(query) ||
+        doctor.location.toLowerCase().includes(query) ||
         doctor.status.toLowerCase().includes(query)
     );
-  }, [availability, deactivatedIds, searchQuery]);
+  }, [availability, deactivatedIds, searchQuery, isSuperAdmin, adminLocation]);
 
   const handleDoctorCreated = () => {
     setSuccessMessage("Doctor account created successfully!");
@@ -60,6 +71,23 @@ export default function AdminDoctorsPage() {
           </Button>
         }
       />
+
+      {/* Location scope banner */}
+      {isSuperAdmin ? (
+        <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800/50 dark:bg-blue-900/20 px-4 py-3">
+          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />
+          <p className="text-sm text-blue-800 dark:text-blue-300">
+            <strong>Super Admin:</strong> Viewing doctors across all NMSL facilities. You can create doctors for any location.
+          </p>
+        </div>
+      ) : (
+        <div className="flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 dark:border-green-800/50 dark:bg-green-900/20 px-4 py-3">
+          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-green-600 dark:text-green-400" />
+          <p className="text-sm text-green-800 dark:text-green-300">
+            Showing doctors for <strong>{adminLocation}</strong>. You can only add doctors to your facility.
+          </p>
+        </div>
+      )}
       
       {successMessage && (
         <div className="p-3 sm:p-4 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 rounded-lg text-sm sm:text-base">
@@ -87,6 +115,9 @@ export default function AdminDoctorsPage() {
                   <h3 className="font-semibold text-base">{doctor.name}</h3>
                   <p className="text-sm text-muted-foreground mt-1">{doctor.specialty}</p>
                   <p className="text-xs text-muted-foreground mt-1">{doctor.qualifications}</p>
+                  <p className="text-xs font-medium text-primary mt-1 flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />{doctor.location}
+                  </p>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
@@ -139,6 +170,7 @@ export default function AdminDoctorsPage() {
           { key: "name", header: "Name" },
           { key: "specialty", header: "Specialty" },
           { key: "qualifications", header: "Qualifications" },
+          { key: "location", header: "Facility" },
           {
             key: "accountStatus",
             header: "Account Status",

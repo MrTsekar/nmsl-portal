@@ -13,6 +13,22 @@ type AuthState = {
   signOut: () => void;
 };
 
+const superAdminUser: User = {
+  id: "u-sa-1",
+  name: "Emeka Nwosu",
+  email: "superadmin@nmsl.app",
+  role: "super_admin",
+  location: "Abuja",
+  state: "FCT",
+  address: "NMSL Headquarters, Central Business District, Abuja",
+  idNumber: "SA-2026-00001",
+  phone: "+234 801 234 5678",
+  dateOfBirth: "1975-06-15",
+  gender: "male",
+  emergencyContactName: "Board Secretary",
+  emergencyContactPhone: "+234 1 234 5000",
+};
+
 const patientUser: User = {
   id: "u-1",
   name: "Arianna Lim",
@@ -39,16 +55,14 @@ export const useAuthStore = create<AuthState>((set) => ({
       user: state.user ? { ...state.user, ...patch } : state.user,
     })),
   switchRole: (role) =>
-    set((state) =>
-      state.user
-        ? {
-            user: { ...state.user, role },
-          }
-        : {
-            user: { ...patientUser, role },
-            token: "mock-token",
-            isAuthenticated: true,
-          },
-    ),
+    set((state) => {
+      const baseUser =
+        role === "super_admin"
+          ? superAdminUser
+          : state.user ?? patientUser;
+      return state.user
+        ? { user: { ...state.user, role } }
+        : { user: { ...baseUser, role }, token: "mock-token", isAuthenticated: true };
+    }),
   signOut: () => set({ token: null, user: null, isAuthenticated: false }),
 }));

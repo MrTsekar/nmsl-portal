@@ -44,7 +44,7 @@ export default function SignInPage() {
         <Input type="password" placeholder="Password" {...form.register("password")} className="h-9 sm:h-10" />
         <div className="space-y-2 rounded-md border border-border bg-muted/30 p-2.5 sm:p-3">
           <p className="text-xs font-medium text-muted-foreground">Demo logins</p>
-          <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+          <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
             <Button
               type="button"
               variant="outline"
@@ -80,6 +80,18 @@ export default function SignInPage() {
               }}
             >
               Admin
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs px-2 border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-400 dark:hover:bg-blue-900/20"
+              onClick={() => {
+                form.setValue("email", "superadmin@nmsl.app");
+                form.setValue("password", "password123");
+              }}
+            >
+              Super Admin
             </Button>
           </div>
         </div>

@@ -67,13 +67,29 @@ export default function AdminSettingsPage() {
       </SectionCard>
 
       <SectionCard title="Platform configuration">
-        <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
-          <Input className="h-10" defaultValue="noreply@nmsl.app" />
-          <Input className="h-10" defaultValue="15" />
-          <Input className="h-10" defaultValue="Main Campus" />
-          <Input className="h-10" defaultValue="UTC+8" />
+        <div className="grid gap-4 sm:gap-5 md:grid-cols-2">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">System notification email</label>
+            <Input className="h-10" defaultValue="noreply@nmsl.app" placeholder="noreply@example.com" />
+            <p className="text-xs text-muted-foreground">Sender address for automated emails (results, reminders, alerts)</p>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Default appointment slot duration (minutes)</label>
+            <Input className="h-10" defaultValue="15" type="number" min={5} step={5} placeholder="15" />
+            <p className="text-xs text-muted-foreground">Length of each bookable appointment slot</p>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Default facility name</label>
+            <Input className="h-10" defaultValue="Main Campus" placeholder="e.g. Abuja Main Campus" />
+            <p className="text-xs text-muted-foreground">Shown when no specific location is set on a booking</p>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Platform timezone</label>
+            <Input className="h-10" defaultValue="UTC+1" placeholder="UTC+1" />
+            <p className="text-xs text-muted-foreground">Nigeria Standard Time (WAT) — UTC+1</p>
+          </div>
         </div>
-        <div className="mt-3 sm:mt-4">
+        <div className="mt-4 sm:mt-5">
           <Button>Save configuration</Button>
         </div>
       </SectionCard>

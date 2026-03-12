@@ -7,6 +7,7 @@ import {
   mockUsers,
   mockDoctorAvailability,
   mockServices,
+  mockStatistics,
 } from "@/lib/mocks/data";
 
 const delay = async (ms = 320) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -135,6 +136,15 @@ export const mockHandlers = {
       const index = mockServices.findIndex((s) => s.id === id);
       if (index !== -1) mockServices.splice(index, 1);
       return { success: true };
+    },
+    listStatistics: async () => {
+      await delay();
+      return [...mockStatistics];
+    },
+    updateStatistics: async (stats: typeof mockStatistics) => {
+      await delay();
+      mockStatistics.splice(0, mockStatistics.length, ...stats.map((s) => ({ ...s })));
+      return [...mockStatistics];
     },
   },
   doctors: {

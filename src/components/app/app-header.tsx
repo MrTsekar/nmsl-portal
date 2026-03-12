@@ -13,7 +13,7 @@ import {
   FEATURE_PREMIUM_THEME_TOGGLE,
   FEATURE_ROLE_SWITCHER,
 } from "@/lib/config/features";
-import { mockNotifications } from "@/lib/mocks/data";
+import { useNotificationStore } from "@/store/notification-store";
 import { useAuthStore } from "@/store/auth-store";
 import { useUiStore } from "@/store/ui-store";
 
@@ -22,7 +22,8 @@ export function AppHeader({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void 
   const { user, signOut, switchRole } = useAuthStore();
   const { premiumTheme, togglePremiumTheme } = useUiStore();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const notifications = mockNotifications.filter((item) => (user ? item.roles.includes(user.role) : false));
+  const { notifications: allNotifications } = useNotificationStore();
+  const notifications = allNotifications.filter((item) => (user ? item.roles.includes(user.role) : false));
   const unreadNotifications = notifications.filter((item) => !item.read);
 
   return (

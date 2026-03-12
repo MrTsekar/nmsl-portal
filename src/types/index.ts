@@ -1,4 +1,4 @@
-export type Role = "patient" | "doctor" | "admin";
+export type Role = "patient" | "doctor" | "admin" | "super_admin";
 
 export type AppointmentStatus =
   | "pending"
@@ -110,7 +110,7 @@ export interface AppNotification {
   message: string;
   createdAt: string;
   read: boolean;
-  category: "appointments" | "results" | "system";
+  category: "appointments" | "results" | "system" | "admin_activity";
   roles: Role[];
 }
 
@@ -138,6 +138,14 @@ export interface KeyService {
   description: string;
 }
 
+export interface Statistic {
+  id: string;
+  value: string;
+  label: string;
+  sublabel: string;
+  icon: "clock" | "building" | "users" | "award" | "heart" | "star";
+}
+
 export type ServiceCategory =
   | "Emergency Services"
   | "Specialized Care"
@@ -154,6 +162,7 @@ export interface Service {
   id: string;
   name: string;
   category: ServiceCategory;
+  location: string;
   shortDescription: string;
   fullDescription: string;
   bannerImageUrl?: string;
