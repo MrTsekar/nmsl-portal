@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/api/client";
 import { withMockFallback } from "@/lib/api/request";
 import { mockHandlers } from "@/lib/mocks/handlers";
-import type { User } from "@/types";
+import type { User, Appointment } from "@/types";
 
 export const adminApi = {
   getKpis: async () => {
@@ -101,6 +101,17 @@ export const adminApi = {
         return data;
       },
       mock: () => mockHandlers.admin.deleteAdmin(id),
+    });
+  },
+
+  // Appointments
+  listAppointments: async (): Promise<Appointment[]> => {
+    return withMockFallback({
+      live: async () => {
+        const { data } = await apiClient.get("/admin/appointments");
+        return data;
+      },
+      mock: () => mockHandlers.admin.listAppointments(),
     });
   },
 

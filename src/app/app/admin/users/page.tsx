@@ -14,19 +14,12 @@ import { useAuthStore } from "@/store/auth-store";
 
 export default function AdminUsersPage() {
   const { user } = useAuthStore();
-  const isSuperAdmin = user?.role === "super_admin";
-  const adminLocation = user?.location ?? "";
 
   const [deactivatedIds, setDeactivatedIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
   const rows = useMemo(() => {
-    // Super admin sees all; regular admin sees only their location's non-admin users
-    const base = isSuperAdmin
-      ? mockUsers
-      : mockUsers.filter((u) => u.location === adminLocation && u.role !== "admin" && u.role !== "super_admin");
-
-    const allUsers = base.map((u) => ({
+    const allUsers = mockUsers.map((u) => ({
       ...u,
       active: !deactivatedIds.includes(u.id),
     }));
@@ -41,28 +34,19 @@ export default function AdminUsersPage() {
         u.role.toLowerCase().includes(query) ||
         u.location.toLowerCase().includes(query)
     );
-  }, [deactivatedIds, searchQuery, isSuperAdmin, adminLocation]);
+  }, [deactivatedIds, searchQuery]);
 
   return (
     <div className="space-y-4 sm:space-y-6">
       <PageHeader title="Users" subtitle="User directory across patient, doctor, and admin roles" />
 
       {/* Location scope banner */}
-      {isSuperAdmin ? (
-        <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800/50 dark:bg-blue-900/20 px-4 py-3">
-          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />
-          <p className="text-sm text-blue-800 dark:text-blue-300">
-            <strong>Super Admin:</strong> Viewing all users across all NMSL facilities.
-          </p>
-        </div>
-      ) : (
-        <div className="flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 dark:border-green-800/50 dark:bg-green-900/20 px-4 py-3">
-          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-green-600 dark:text-green-400" />
-          <p className="text-sm text-green-800 dark:text-green-300">
-            Showing patients and doctors for <strong>{adminLocation}</strong>.
-          </p>
-        </div>
-      )}
+      <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800/50 dark:bg-blue-900/20 px-4 py-3">
+        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />
+        <p className="text-sm text-blue-800 dark:text-blue-300">
+          Viewing all users across all NMSL facilities.
+        </p>
+      </div>
       
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />

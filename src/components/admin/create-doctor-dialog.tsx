@@ -70,9 +70,6 @@ export function CreateDoctorDialog({ open, onOpenChange, onSuccess }: CreateDoct
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuthStore();
-  const isSuperAdmin = user?.role === "super_admin";
-  const lockedLocation = isSuperAdmin ? undefined : (user?.location as FormValues["location"] | undefined);
-  const lockedState = isSuperAdmin ? undefined : user?.state;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -83,8 +80,8 @@ export function CreateDoctorDialog({ open, onOpenChange, onSuccess }: CreateDoct
       phone: "",
       qualifications: "",
       specialty: "General Practice",
-      location: lockedLocation ?? "Abuja",
-      state: lockedState ?? "FCT",
+      location: "Abuja",
+      state: "FCT",
       address: "",
     },
   });
@@ -119,21 +116,12 @@ export function CreateDoctorDialog({ open, onOpenChange, onSuccess }: CreateDoct
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
 
           {/* Location callout */}
-          {isSuperAdmin ? (
-            <div className="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 dark:border-amber-700/60 dark:bg-amber-900/20 p-3">
-              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-              <p className="text-sm text-amber-800 dark:text-amber-300">
-                <strong>Location is critical.</strong> As super admin, you can assign this doctor to any NMSL facility.
-              </p>
-            </div>
-          ) : (
-            <div className="flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 dark:border-green-800/50 dark:bg-green-900/20 p-3">
-              <Lock className="mt-0.5 h-4 w-4 shrink-0 text-green-600 dark:text-green-400" />
-              <p className="text-sm text-green-800 dark:text-green-300">
-                This doctor will be assigned to your facility: <strong>{lockedLocation}</strong>. Only a super admin can create doctors for other locations.
-              </p>
-            </div>
-          )}
+          <div className="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 dark:border-amber-700/60 dark:bg-amber-900/20 p-3">
+            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+            <p className="text-sm text-amber-800 dark:text-amber-300">
+              <strong>Location is critical.</strong> You can assign this doctor to any NMSL facility.
+            </p>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Location first — most important */}
@@ -141,31 +129,22 @@ export function CreateDoctorDialog({ open, onOpenChange, onSuccess }: CreateDoct
               <Label htmlFor="location" className="text-base font-semibold flex items-center gap-1">
                 <MapPin className="h-4 w-4 text-primary" /> Facility Location *
               </Label>
-              {isSuperAdmin ? (
-                <Select
-                  defaultValue="Abuja"
-                  onValueChange={(value) => form.setValue("location", value as FormValues["location"])}
-                  disabled={isSubmitting}
-                >
-                  <SelectTrigger id="location" className="border-primary/60 ring-1 ring-primary/30">
-                    <SelectValue placeholder="Select location" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LOCATION_OPTIONS.map((location) => (
-                      <SelectItem key={location} value={location}>
-                        {location}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <Input
-                  id="location"
-                  value={lockedLocation ?? ""}
-                  disabled
-                  className="bg-muted cursor-not-allowed"
-                />
-              )}
+              <Select
+                defaultValue="Abuja"
+                onValueChange={(value) => form.setValue("location", value as FormValues["location"])}
+                disabled={isSubmitting}
+              >
+                <SelectTrigger id="location" className="border-primary/60 ring-1 ring-primary/30">
+                  <SelectValue placeholder="Select location" />
+                </SelectTrigger>
+                <SelectContent>
+                  {LOCATION_OPTIONS.map((location) => (
+                    <SelectItem key={location} value={location}>
+                      {location}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {form.formState.errors.location && (
                 <p className="text-sm text-destructive">{form.formState.errors.location.message}</p>
               )}
@@ -173,14 +152,7 @@ export function CreateDoctorDialog({ open, onOpenChange, onSuccess }: CreateDoct
 
             <div className="space-y-2">
               <Label htmlFor="state" className="text-base font-semibold">State *</Label>
-              {!isSuperAdmin ? (
-                <Input
-                  id="state"
-                  value={lockedState ?? ""}
-                  disabled
-                  className="bg-muted cursor-not-allowed"
-                />
-              ) : selectedLocation === "Other" ? (
+              {selectedLocation === "Other" ? (
                 <Input
                   id="state"
                   placeholder="Enter state"

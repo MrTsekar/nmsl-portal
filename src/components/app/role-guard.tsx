@@ -18,7 +18,7 @@ export function RoleGuard({
 
   useEffect(() => {
     if (user && !allow.includes(user.role)) {
-      router.replace("/app/overview");
+      router.replace("/app/admin");
     }
   }, [allow, router, user]);
 

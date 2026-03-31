@@ -21,8 +21,6 @@ const doctors = [
 
 export default function AdminDoctorsPage() {
   const { user } = useAuthStore();
-  const isSuperAdmin = user?.role === "super_admin";
-  const adminLocation = user?.location ?? "";
 
   const [availability, setAvailability] = useState<Record<string, boolean>>({});
   const [deactivatedIds, setDeactivatedIds] = useState<string[]>([]);
@@ -31,11 +29,7 @@ export default function AdminDoctorsPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const rows = useMemo(() => {
-    const filtered = isSuperAdmin
-      ? doctors
-      : doctors.filter((d) => d.location === adminLocation);
-
-    const allDoctors = filtered.map((doctor) => ({
+    const allDoctors = doctors.map((doctor) => ({
       ...doctor,
       available: availability[doctor.id] ?? true,
       active: !deactivatedIds.includes(doctor.id),
@@ -52,7 +46,7 @@ export default function AdminDoctorsPage() {
         doctor.location.toLowerCase().includes(query) ||
         doctor.status.toLowerCase().includes(query)
     );
-  }, [availability, deactivatedIds, searchQuery, isSuperAdmin, adminLocation]);
+  }, [availability, deactivatedIds, searchQuery]);
 
   const handleDoctorCreated = () => {
     setSuccessMessage("Doctor account created successfully!");
@@ -73,21 +67,12 @@ export default function AdminDoctorsPage() {
       />
 
       {/* Location scope banner */}
-      {isSuperAdmin ? (
-        <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800/50 dark:bg-blue-900/20 px-4 py-3">
-          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />
-          <p className="text-sm text-blue-800 dark:text-blue-300">
-            <strong>Super Admin:</strong> Viewing doctors across all NMSL facilities. You can create doctors for any location.
-          </p>
-        </div>
-      ) : (
-        <div className="flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 dark:border-green-800/50 dark:bg-green-900/20 px-4 py-3">
-          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-green-600 dark:text-green-400" />
-          <p className="text-sm text-green-800 dark:text-green-300">
-            Showing doctors for <strong>{adminLocation}</strong>. You can only add doctors to your facility.
-          </p>
-        </div>
-      )}
+      <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800/50 dark:bg-blue-900/20 px-4 py-3">
+        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />
+        <p className="text-sm text-blue-800 dark:text-blue-300">
+          Viewing doctors across all NMSL facilities. You can create doctors for any location.
+        </p>
+      </div>
       
       {successMessage && (
         <div className="p-3 sm:p-4 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 rounded-lg text-sm sm:text-base">

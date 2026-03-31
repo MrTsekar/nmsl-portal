@@ -9,7 +9,7 @@ export default function HomePage() {
   const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
-    router.replace(isAuthenticated ? "/app/overview" : "/sign-in");
+    router.replace(isAuthenticated ? "/app/admin" : "/sign-in");
   }, [isAuthenticated, router]);
 
   return <div className="min-h-screen bg-background" />;

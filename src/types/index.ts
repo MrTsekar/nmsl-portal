@@ -1,14 +1,4 @@
-export type Role = "patient" | "doctor" | "admin" | "super_admin";
-
-export type AppointmentStatus =
-  | "pending"
-  | "confirmed"
-  | "rescheduled"
-  | "completed"
-  | "cancelled"
-  | "rejected";
-
-export type ResultStatus = "pending" | "ready";
+export type Role = "admin";
 
 export type MedicalSpecialty =
   | "General Practice"
@@ -31,77 +21,47 @@ export interface User {
   state?: string;
   address?: string;
   avatar?: string;
-  qualifications?: string;
-  specialty?: MedicalSpecialty; // For doctors
-  idNumber?: string;
   phone?: string;
   dateOfBirth?: string;
   gender?: "female" | "male" | "other";
-  emergencyContactName?: string;
-  emergencyContactPhone?: string;
-  emergencyContact?: string;
 }
+
+// Doctor representation for admin management
+export interface Doctor {
+  id: string;
+  name: string;
+  email: string;
+  specialty: MedicalSpecialty;
+  location: string;
+  state?: string;
+  phone?: string;
+  qualifications?: string;
+  avatar?: string;
+  isActive?: boolean;
+}
+
+// Patient/User representation for admin management
+export interface Patient {
+  id: string;
+  name: string;
+  email: string;
+  location: string;
+  phone?: string;
+  dateOfBirth?: string;
+  isActive?: boolean;
+}
+
+export type AppointmentStatus = "scheduled" | "confirmed" | "cancelled" | "completed" | "no-show";
 
 export interface Appointment {
   id: string;
-  patientId?: string;
   patientName: string;
   doctorName: string;
-  doctorId?: string;
-  specialty?: MedicalSpecialty;
   date: string;
   time: string;
-  durationMinutes?: number;
-  consultationType?: "in-person" | "telehealth";
-  location: string;
   status: AppointmentStatus;
-  reason: string;
-  patientNotes?: string;
-  notes?: string;
-  prescriptions?: Array<{
-    id: string;
-    drugName: string;
-    dosage: string;
-    frequency: string;
-    duration: string;
-    instructions?: string;
-  }>;
-}
-
-export interface ChatConversation {
-  id: string;
-  appointmentId: string;
-  title: string;
-  lastMessage: string;
-  unreadCount: number;
-  participants: string[];
-}
-
-export interface Message {
-  id: string;
-  conversationId: string;
-  sender: string;
-  body: string;
-  sentAt: string;
-  own?: boolean;
-}
-
-export interface MedicalResult {
-  id: string;
-  patientName?: string;
-  testName: string;
-  date: string;
-  status: ResultStatus;
-  summary: string;
-  doctor: string;
-  labName?: string;
-  specimen?: string;
-  resultValue?: string;
-  unit?: string;
-  referenceRange?: string;
-  interpretation?: string;
-  collectedAt?: string;
-  reportedAt?: string;
+  location: string;
+  specialty: MedicalSpecialty;
 }
 
 export interface AppNotification {
@@ -110,26 +70,8 @@ export interface AppNotification {
   message: string;
   createdAt: string;
   read: boolean;
-  category: "appointments" | "results" | "system" | "admin_activity";
+  category: "system" | "admin_activity";
   roles: Role[];
-}
-
-export type DayOfWeek = "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday";
-
-export interface TimeSlot {
-  start: string; // HH:MM format
-  end: string; // HH:MM format
-}
-
-export interface DoctorAvailability {
-  doctorId: string;
-  doctorName: string;
-  availableDays: DayOfWeek[];
-  timeSlots: TimeSlot[];
-  bookedSlots: Array<{
-    date: string; // YYYY-MM-DD
-    time: string; // HH:MM
-  }>;
 }
 
 export interface KeyService {

@@ -64,7 +64,6 @@ const emptyForm = (): FormState => ({
 
 export default function AdminServicesPage() {
   const { user } = useAuthStore();
-  const isSuperAdmin = user?.role === "super_admin";
   const adminLocation = user?.location ?? "";
 
   const [services, setServices] = useState<Service[]>([]);
@@ -93,9 +92,8 @@ export default function AdminServicesPage() {
     };
   }, []);
 
-  // Split into own location vs other locations
-  const myServices = isSuperAdmin ? services : services.filter((s) => s.location === adminLocation);
-  const otherServices = isSuperAdmin ? [] : services.filter((s) => s.location !== adminLocation);
+  // Admin can view all services across all locations
+  const allServices = services;
 
   const openCreate = () => {
     setEditingId(null);
@@ -157,7 +155,7 @@ export default function AdminServicesPage() {
   const handleSave = async () => {
     if (!form.name.trim() || !form.shortDescription.trim()) return;
     setSaving(true);
-    const serviceLocation = isSuperAdmin ? editingLocation : adminLocation;
+    const serviceLocation = editingLocation || adminLocation;
     try {
       if (editingId) {
         const updated = await servicesApi.update(editingId, { ...form, location: serviceLocation });
@@ -190,53 +188,32 @@ export default function AdminServicesPage() {
       />
 
       {/* Location scope banner */}
-      {isSuperAdmin ? (
-        <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800/50 dark:bg-blue-900/20 px-4 py-3">
-          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />
-          <p className="text-sm text-blue-800 dark:text-blue-300">
-            <strong>Super Admin:</strong> You can add, edit, and delete services across all NMSL facilities.
-          </p>
-        </div>
-      ) : (
-        <div className="flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 dark:border-green-800/50 dark:bg-green-900/20 px-4 py-3">
-          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-green-600 dark:text-green-400" />
-          <p className="text-sm text-green-800 dark:text-green-300">
-            You are managing services for <strong>{adminLocation}</strong>. You can only add, edit, or delete services assigned to your location. Services from other facilities are visible below for reference only.
-          </p>
-        </div>
-      )}
+      <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800/50 dark:bg-blue-900/20 px-4 py-3">
+        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />
+        <p className="text-sm text-blue-800 dark:text-blue-300">
+          You can manage services across all NMSL facilities.
+        </p>
+      </div>
 
-      {/* Services grid — super admin sees all as editable, regular admin sees own location */}
-      <SectionCard title={isSuperAdmin ? "All facility services" : `${adminLocation} services`}>
+      {/* All Services */}
+      <SectionCard title="All services">
         {loading ? (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {[1, 2, 3].map((i) => <div key={i} className="h-64 rounded-xl bg-muted/40 animate-pulse" />)}
           </div>
-        ) : myServices.length === 0 ? (
+        ) : allServices.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-10 text-center text-muted-foreground">
             <ImagePlus className="h-10 w-10 opacity-30" />
-            <p className="text-sm">No services yet for <strong>{adminLocation}</strong>. Click <strong>Add service</strong> to create one.</p>
+            <p className="text-sm">No services yet. Click <strong>Add service</strong> to create one.</p>
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {myServices.map((svc) => (
+            {allServices.map((svc) => (
               <ServiceCard key={svc.id} svc={svc} canEdit onEdit={openEdit} onDelete={handleDelete} />
             ))}
           </div>
         )}
       </SectionCard>
-
-      {/* Other locations — read-only (regular admin only) */}
-      {!loading && !isSuperAdmin && otherServices.length > 0 && (
-        <SectionCard title="Other locations (read-only)">
-          <p className="mb-4 text-xs text-muted-foreground">These services belong to other facilities. You cannot edit or delete them.</p>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {otherServices.map((svc) => (
-              <ServiceCard key={svc.id} svc={svc} canEdit={false} onEdit={openEdit} onDelete={handleDelete} />
-            ))}
-          </div>
-        </SectionCard>
-      )}
 
       {/* Add / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -246,21 +223,12 @@ export default function AdminServicesPage() {
           </DialogHeader>
 
           {/* Location notice in dialog */}
-          {isSuperAdmin ? (
-            <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800/50 dark:bg-blue-900/20 px-3 py-2">
-              <MapPin className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />
-              <span className="text-sm text-blue-800 dark:text-blue-300">
-                Assigned to facility: <strong>{editingLocation || adminLocation}</strong>
-              </span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 dark:border-green-800/50 dark:bg-green-900/20 px-3 py-2">
-              <MapPin className="h-4 w-4 shrink-0 text-green-600 dark:text-green-400" />
-              <p className="text-sm text-green-800 dark:text-green-300">
-                This service will be assigned to <strong>{adminLocation}</strong>
-              </p>
-            </div>
-          )}
+          <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800/50 dark:bg-blue-900/20 px-3 py-2">
+            <MapPin className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />
+            <span className="text-sm text-blue-800 dark:text-blue-300">
+              Assigned to facility: <strong>{editingLocation || adminLocation}</strong>
+            </span>
+          </div>
 
           <div className="space-y-5 pt-1">
             <div className="grid gap-3 sm:grid-cols-2">

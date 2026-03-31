@@ -1,13 +1,9 @@
 import type { Role } from "@/types";
 import {
-  mockAppointments,
-  mockConversations,
-  mockMessages,
-  mockResults,
   mockUsers,
-  mockDoctorAvailability,
   mockServices,
   mockStatistics,
+  mockAppointments,
 } from "@/lib/mocks/data";
 
 const delay = async (ms = 320) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -42,49 +38,6 @@ export const mockHandlers = {
       return mockUsers.find((user) => user.id === id) ?? mockUsers[0];
     },
   },
-  appointments: {
-    list: async (status?: string) => {
-      await delay();
-      return status ? mockAppointments.filter((item) => item.status === status) : mockAppointments;
-    },
-    get: async (id: string) => {
-      await delay();
-      return mockAppointments.find((item) => item.id === id) ?? mockAppointments[0];
-    },
-    reschedule: async (id: string, payload: { date: string; time: string; reason?: string }) => {
-      await delay();
-      return {
-        success: true,
-        appointment: {
-          ...mockAppointments.find((item) => item.id === id),
-          date: payload.date,
-          time: payload.time,
-          status: "rescheduled" as const,
-          notes: payload.reason ? `Rescheduled: ${payload.reason}` : "Appointment rescheduled",
-        },
-      };
-    },
-  },
-  chat: {
-    conversations: async () => {
-      await delay();
-      return mockConversations;
-    },
-    messages: async (conversationId: string) => {
-      await delay();
-      return mockMessages.filter((item) => item.conversationId === conversationId);
-    },
-  },
-  results: {
-    list: async () => {
-      await delay();
-      return mockResults;
-    },
-    get: async (id: string) => {
-      await delay();
-      return mockResults.find((item) => item.id === id) ?? mockResults[0];
-    },
-  },
   admin: {
     kpis: async () => {
       await delay();
@@ -99,14 +52,8 @@ export const mockHandlers = {
     // Doctor Management
     listDoctors: async (params?: { location?: string; specialty?: string }) => {
       await delay();
-      let doctors = mockUsers.filter((u) => u.role === "doctor");
-      if (params?.location) {
-        doctors = doctors.filter((d) => d.location === params.location);
-      }
-      if (params?.specialty) {
-        doctors = doctors.filter((d) => d.specialty === params.specialty);
-      }
-      return doctors;
+      // Doctors are separate from admin users - return empty for now
+      return [];
     },
     
     createDoctor: async (payload: any) => {
@@ -128,7 +75,7 @@ export const mockHandlers = {
       };
     },
     
-    // Admin Management (Super Admin only)
+    // Admin Management
     listAdmins: async () => {
       await delay();
       const admins = mockUsers.filter((u) => u.role === "admin");
@@ -242,43 +189,11 @@ export const mockHandlers = {
       mockStatistics.splice(0, mockStatistics.length, ...stats.map((s) => ({ ...s })));
       return [...mockStatistics];
     },
-  },
-  doctors: {
-    getAvailability: async (doctorId: string) => {
+    
+    // Appointments
+    listAppointments: async () => {
       await delay();
-      return mockDoctorAvailability.find((item) => item.doctorId === doctorId) ?? mockDoctorAvailability[0];
-    },
-    getAvailabilityByName: async (doctorName: string) => {
-      await delay();
-      return mockDoctorAvailability.find((item) => item.doctorName === doctorName) ?? mockDoctorAvailability[0];
-    },
-    checkAvailability: async (doctorId: string, date: string, time: string) => {
-      await delay();
-      const doctorSchedule = mockDoctorAvailability.find((item) => item.doctorId === doctorId);
-      if (!doctorSchedule) {
-        return { available: false };
-      }
-
-      // Check if the date is an available day
-      const dayOfWeek = new Date(date).toLocaleDateString("en-US", { weekday: "long" }).toLowerCase();
-      if (!doctorSchedule.availableDays.includes(dayOfWeek as any)) {
-        return { available: false };
-      }
-
-      // Check if the time slot exists
-      const hasTimeSlot = doctorSchedule.timeSlots.some(
-        (slot) => slot.start === time
-      );
-      if (!hasTimeSlot) {
-        return { available: false };
-      }
-
-      // Check if the slot is already booked
-      const isBooked = doctorSchedule.bookedSlots.some(
-        (slot) => slot.date === date && slot.time === time
-      );
-
-      return { available: !isBooked };
+      return [...mockAppointments];
     },
   },
 };

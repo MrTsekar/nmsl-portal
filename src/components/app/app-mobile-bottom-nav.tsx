@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, LayoutDashboard, MessageSquare, UserRound, Users } from "lucide-react";
+import { LayoutDashboard, Users, BookUser, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
 
@@ -10,20 +10,11 @@ export function AppMobileBottomNav() {
   const pathname = usePathname();
   const role = useAuthStore((state) => state.user?.role);
 
-  const baseItems = [
-    { label: "Overview", href: "/app/overview", icon: LayoutDashboard },
-    { label: "Appointments", href: "/app/appointments", icon: CalendarDays },
-  ];
-
-  const roleSpecificItems = 
-    role === "admin" 
-      ? [{ label: "Users", href: "/app/admin/users", icon: Users }]
-      : [{ label: "Chat", href: "/app/chat", icon: MessageSquare }];
-
   const items = [
-    ...baseItems,
-    ...roleSpecificItems,
-    { label: "Profile", href: "/app/profile", icon: UserRound },
+    { label: "Dashboard", href: "/app/admin", icon: LayoutDashboard },
+    { label: "Users", href: "/app/admin/users", icon: Users },
+    { label: "Doctors", href: "/app/admin/doctors", icon: BookUser },
+    { label: "Settings", href: "/app/admin/settings", icon: Settings },
   ];
 
   return (
