@@ -113,3 +113,40 @@ export interface Service {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface Partner {
+  id: string;
+  name: string;
+  logoUrl: string;
+  description?: string;
+  order: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BoardMember {
+  id: string;
+  name: string;
+  title: string;
+  photoUrl: string;
+  bio?: string;
+  order: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ContactInfo {
+  id: string;
+  phone: string;
+  emailPrimary: string;
+  emailSecondary?: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  country: string;
+  officeHours: string;
+  emergencyHours: string;
+  updatedAt: string;
+}

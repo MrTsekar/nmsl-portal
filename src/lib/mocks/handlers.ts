@@ -4,6 +4,9 @@ import {
   mockServices,
   mockStatistics,
   mockAppointments,
+  mockPartners,
+  mockBoardMembers,
+  mockContactInfo,
 } from "@/lib/mocks/data";
 
 const delay = async (ms = 320) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -194,6 +197,138 @@ export const mockHandlers = {
     listAppointments: async () => {
       await delay();
       return [...mockAppointments];
+    },
+  },
+  
+  partners: {
+    list: async () => {
+      await delay();
+      return mockPartners.filter((p) => p.isActive).sort((a, b) => a.order - b.order);
+    },
+    
+    listAll: async () => {
+      await delay();
+      return [...mockPartners].sort((a, b) => a.order - b.order);
+    },
+    
+    create: async (payload: Omit<typeof mockPartners[0], "id" | "createdAt" | "updatedAt">) => {
+      await delay();
+      const newPartner = {
+        id: `ptn-${Date.now()}`,
+        ...payload,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      mockPartners.push(newPartner);
+      return newPartner;
+    },
+    
+    update: async (id: string, payload: Partial<Omit<typeof mockPartners[0], "id" | "createdAt" | "updatedAt">>) => {
+      await delay();
+      const index = mockPartners.findIndex((p) => p.id === id);
+      if (index !== -1) {
+        mockPartners[index] = {
+          ...mockPartners[index],
+          ...payload,
+          updatedAt: new Date().toISOString(),
+        };
+        return mockPartners[index];
+      }
+      throw new Error("Partner not found");
+    },
+    
+    delete: async (id: string) => {
+      await delay();
+      const index = mockPartners.findIndex((p) => p.id === id);
+      if (index !== -1) {
+        mockPartners.splice(index, 1);
+      }
+      return { success: true };
+    },
+    
+    toggleActive: async (id: string) => {
+      await delay();
+      const index = mockPartners.findIndex((p) => p.id === id);
+      if (index !== -1) {
+        mockPartners[index].isActive = !mockPartners[index].isActive;
+        mockPartners[index].updatedAt = new Date().toISOString();
+        return mockPartners[index];
+      }
+      throw new Error("Partner not found");
+    },
+  },
+  
+  boardMembers: {
+    list: async () => {
+      await delay();
+      return mockBoardMembers.filter((b) => b.isActive).sort((a, b) => a.order - b.order);
+    },
+    
+    listAll: async () => {
+      await delay();
+      return [...mockBoardMembers].sort((a, b) => a.order - b.order);
+    },
+    
+    create: async (payload: Omit<typeof mockBoardMembers[0], "id" | "createdAt" | "updatedAt">) => {
+      await delay();
+      const newMember = {
+        id: `bm-${Date.now()}`,
+        ...payload,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      mockBoardMembers.push(newMember);
+      return newMember;
+    },
+    
+    update: async (id: string, payload: Partial<Omit<typeof mockBoardMembers[0], "id" | "createdAt" | "updatedAt">>) => {
+      await delay();
+      const index = mockBoardMembers.findIndex((b) => b.id === id);
+      if (index !== -1) {
+        mockBoardMembers[index] = {
+          ...mockBoardMembers[index],
+          ...payload,
+          updatedAt: new Date().toISOString(),
+        };
+        return mockBoardMembers[index];
+      }
+      throw new Error("Board member not found");
+    },
+    
+    delete: async (id: string) => {
+      await delay();
+      const index = mockBoardMembers.findIndex((b) => b.id === id);
+      if (index !== -1) {
+        mockBoardMembers.splice(index, 1);
+      }
+      return { success: true };
+    },
+    
+    toggleActive: async (id: string) => {
+      await delay();
+      const index = mockBoardMembers.findIndex((b) => b.id === id);
+      if (index !== -1) {
+        mockBoardMembers[index].isActive = !mockBoardMembers[index].isActive;
+        mockBoardMembers[index].updatedAt = new Date().toISOString();
+        return mockBoardMembers[index];
+      }
+      throw new Error("Board member not found");
+    },
+  },
+  
+  contact: {
+    get: async () => {
+      await delay();
+      return { ...mockContactInfo };
+    },
+    
+    update: async (payload: Partial<typeof mockContactInfo>) => {
+      await delay();
+      Object.assign(mockContactInfo, {
+        ...payload,
+        updatedAt: new Date().toISOString(),
+      });
+      return { ...mockContactInfo };
     },
   },
 };

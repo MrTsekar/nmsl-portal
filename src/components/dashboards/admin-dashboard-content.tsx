@@ -1,7 +1,6 @@
 "use client";
 
-import { Activity, CalendarCheck, Users } from "lucide-react";
-import { ChartCard } from "@/components/shared/chart-card";
+import { CalendarCheck } from "lucide-react";
 import { StatCard } from "@/components/shared/stat-card";
 import { SectionCard } from "@/components/shared/section-card";
 import { useAdminKpis, useAppointments } from "@/hooks/use-app-data";
@@ -22,10 +21,8 @@ export function AdminDashboardContent() {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-4">
-        <StatCard title="Total users" value={kpis.data?.totalUsers ?? 0} icon={<Users className="h-4 w-4 text-muted-foreground" />} />
+      <div className="grid gap-3 sm:gap-4 grid-cols-2">
         <StatCard title="Appointments today" value={kpis.data?.appointmentsToday ?? 0} icon={<CalendarCheck className="h-4 w-4 text-muted-foreground" />} />
-        <StatCard title="Utilization" value={kpis.data?.utilization ?? "0%"} icon={<Activity className="h-4 w-4 text-muted-foreground" />} />
         <StatCard title="Pending approvals" value={kpis.data?.pendingApprovals ?? 0} />
       </div>
       <SectionCard title="Appointments by status">
@@ -38,11 +35,6 @@ export function AdminDashboardContent() {
           ))}
         </div>
       </SectionCard>
-      <ChartCard
-        title="Utilization trend"
-        subtitle="7-day operational load index"
-        bars={[38, 44, 52, 49, 63, 58, 71]}
-      />
     </div>
   );
 }

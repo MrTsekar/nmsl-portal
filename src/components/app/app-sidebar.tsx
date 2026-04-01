@@ -24,7 +24,13 @@ export function AppSidebarNav({
       {navItems
         .filter((item) => (user ? item.roles.includes(user.role) : false))
         .map((item) => {
-          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          // Exact match or starts with the href followed by a slash, but not if there's a more specific match
+          const isExactMatch = pathname === item.href;
+          const isSubRoute = pathname.startsWith(`${item.href}/`);
+          const hasMoreSpecificMatch = navItems.some(
+            (other) => other.href !== item.href && pathname.startsWith(other.href) && other.href.startsWith(item.href)
+          );
+          const active = isExactMatch || (isSubRoute && !hasMoreSpecificMatch);
           const Icon = item.icon;
           return (
             <Link
