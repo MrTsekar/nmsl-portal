@@ -16,9 +16,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const premiumTheme = useUiStore((state) => state.premiumTheme);
 
   return (
-    <div className={cn("flex min-h-screen", premiumTheme && "premium-theme")}>
+    <div className={cn("min-h-screen", premiumTheme && "premium-theme")}>
       <AppSidebar collapsed={collapsed} onToggle={() => setCollapsed((prev) => !prev)} />
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className={cn("flex min-h-screen min-w-0 flex-1 flex-col transition-[padding] duration-200", collapsed ? "md:pl-16" : "md:pl-64")}>
         <AppHeader onOpenMobileMenu={() => setMobileMenuOpen(true)} />
         <main className="flex-1 p-3 pb-20 sm:p-4 sm:pb-24 md:p-6 md:pb-6">
           <AppBreadcrumbs />

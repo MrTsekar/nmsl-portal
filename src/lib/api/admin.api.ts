@@ -115,6 +115,32 @@ export const adminApi = {
     });
   },
 
+  updateAppointmentStatus: async (
+    id: string,
+    status: "confirmed" | "rejected",
+  ): Promise<Appointment> => {
+    return withMockFallback({
+      live: async () => {
+        const { data } = await apiClient.patch(`/admin/appointments/${id}/status`, { status });
+        return data;
+      },
+      mock: () => mockHandlers.admin.updateAppointmentStatus(id, status),
+    });
+  },
+
+  rescheduleAppointment: async (
+    id: string,
+    payload: { date: string; time: string; rescheduleReason?: string },
+  ): Promise<Appointment> => {
+    return withMockFallback({
+      live: async () => {
+        const { data } = await apiClient.patch(`/admin/appointments/${id}/reschedule`, payload);
+        return data;
+      },
+      mock: () => mockHandlers.admin.rescheduleAppointment(id, payload),
+    });
+  },
+
   // User Management
   listUsers: async (params?: { role?: string; location?: string }): Promise<User[]> => {
     return withMockFallback({

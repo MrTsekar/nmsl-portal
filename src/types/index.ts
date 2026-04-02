@@ -51,18 +51,37 @@ export interface Patient {
   isActive?: boolean;
 }
 
-export type AppointmentStatus = "scheduled" | "confirmed" | "cancelled" | "completed" | "no-show";
+export type AppointmentStatus =
+  | "pending"
+  | "scheduled"
+  | "confirmed"
+  | "rescheduled"
+  | "cancelled"
+  | "rejected"
+  | "completed"
+  | "no-show";
+
+export type VisitType = "Physical" | "Telemedicine";
 
 export interface Appointment {
   id: string;
   patientName: string;
+  patientEmail?: string;
+  patientPhone?: string;
   doctorName: string;
   date: string;
   time: string;
   status: AppointmentStatus;
   location: string;
   specialty: MedicalSpecialty;
+  visitType?: VisitType;
+  reasonForVisit?: string;
+  additionalComment?: string;
+  isUrgent?: boolean;
+  rescheduleReason?: string;
 }
+
+export type ResultStatus = "pending" | "ready" | "rejected";
 
 export interface AppNotification {
   id: string;

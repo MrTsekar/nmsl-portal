@@ -198,6 +198,42 @@ export const mockHandlers = {
       await delay();
       return [...mockAppointments];
     },
+
+    updateAppointmentStatus: async (id: string, status: "confirmed" | "rejected") => {
+      await delay();
+      const index = mockAppointments.findIndex((apt) => apt.id === id);
+      if (index === -1) {
+        throw new Error("Appointment not found");
+      }
+
+      mockAppointments[index] = {
+        ...mockAppointments[index],
+        status,
+      };
+
+      return { ...mockAppointments[index] };
+    },
+
+    rescheduleAppointment: async (
+      id: string,
+      payload: { date: string; time: string; rescheduleReason?: string },
+    ) => {
+      await delay();
+      const index = mockAppointments.findIndex((apt) => apt.id === id);
+      if (index === -1) {
+        throw new Error("Appointment not found");
+      }
+
+      mockAppointments[index] = {
+        ...mockAppointments[index],
+        date: payload.date,
+        time: payload.time,
+        rescheduleReason: payload.rescheduleReason,
+        status: "rescheduled",
+      };
+
+      return { ...mockAppointments[index] };
+    },
   },
   
   partners: {
