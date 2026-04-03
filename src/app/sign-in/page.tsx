@@ -53,6 +53,13 @@ export default function SignInPage() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2.5 sm:space-y-3">
         <Input placeholder="Email" {...form.register("email")} className="h-9 sm:h-10" />
         <Input type="password" placeholder="Password" {...form.register("password")} className="h-9 sm:h-10" />
+        
+        <div className="flex items-center justify-end">
+          <Link href="/forgot-password" className="text-xs text-green-600 hover:text-green-700 dark:text-green-500 dark:hover:text-green-400">
+            Forgot password?
+          </Link>
+        </div>
+        
         <Button className="w-full h-9 sm:h-10" type="submit">Sign in</Button>
         
         <div className="space-y-1.5 pt-2">
