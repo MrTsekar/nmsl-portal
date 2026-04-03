@@ -150,6 +150,27 @@ export const mockHandlers = {
         message: newStatus ? "User activated successfully" : "User deactivated successfully",
       };
     },
+
+    resetUserPassword: async (id: string) => {
+      await delay();
+      const user = mockUsers.find((u) => u.id === id);
+      return {
+        success: true,
+        message: `Password reset link sent to ${user?.email || "user"}`,
+      };
+    },
+
+    updateUserEmail: async (id: string, email: string) => {
+      await delay();
+      const user = mockUsers.find((u) => u.id === id);
+      if (user) {
+        user.email = email;
+      }
+      return {
+        success: true,
+        message: "Email updated successfully",
+      };
+    },
     
     // Services Management
     listServices: async () => {

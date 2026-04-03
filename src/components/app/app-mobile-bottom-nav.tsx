@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Globe, Settings } from "lucide-react";
+import { LayoutDashboard, Users, Globe, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function AppMobileBottomNav() {
@@ -12,7 +12,7 @@ export function AppMobileBottomNav() {
     { label: "Dashboard", href: "/app/admin", icon: LayoutDashboard },
     { label: "Users", href: "/app/admin/users", icon: Users },
     { label: "Website", href: "/app/admin/appointments", icon: Globe },
-    { label: "Settings", href: "/app/admin/settings", icon: Settings },
+    { label: "Profile", href: "/app/admin/settings", icon: User },
   ];
 
   return (

@@ -129,8 +129,7 @@ export function AppHeader({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void 
             ) : null}
             {FEATURE_ROLE_SWITCHER && user?.role === "admin" ? (
               <>
-                <DropdownMenuItem onClick={() => switchRole("patient")}>Switch to patient</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => switchRole("doctor")}>Switch to doctor</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => switchRole("appointment_officer")}>Switch to appointment officer</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => switchRole("admin")}>Switch to admin</DropdownMenuItem>
               </>
             ) : null}

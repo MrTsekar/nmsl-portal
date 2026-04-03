@@ -1,4 +1,4 @@
-export type Role = "admin";
+export type Role = "admin" | "appointment_officer";
 
 export type MedicalSpecialty =
   | "General Practice"

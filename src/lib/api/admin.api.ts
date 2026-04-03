@@ -161,4 +161,24 @@ export const adminApi = {
       mock: () => mockHandlers.admin.toggleUserStatus(id),
     });
   },
+
+  resetUserPassword: async (id: string): Promise<{ success: boolean; message: string }> => {
+    return withMockFallback({
+      live: async () => {
+        const { data } = await apiClient.post(`/admin/users/${id}/reset-password`);
+        return data;
+      },
+      mock: () => mockHandlers.admin.resetUserPassword(id),
+    });
+  },
+
+  updateUserEmail: async (id: string, email: string): Promise<{ success: boolean; message: string }> => {
+    return withMockFallback({
+      live: async () => {
+        const { data } = await apiClient.patch(`/admin/users/${id}/email`, { email });
+        return data;
+      },
+      mock: () => mockHandlers.admin.updateUserEmail(id, email),
+    });
+  },
 };

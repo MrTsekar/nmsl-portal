@@ -26,9 +26,9 @@ export function AdminDashboardContent() {
         <StatCard title="Pending approvals" value={kpis.data?.pendingApprovals ?? 0} />
       </div>
       <SectionCard title="Appointments by status">
-        <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="flex gap-2 overflow-x-auto pb-1">
           {Object.entries(statusGroups).map(([status, value]) => (
-            <div key={status} className="rounded-md border border-border p-2 sm:p-3">
+            <div key={status} className="rounded-md border border-border p-2 sm:p-3 min-w-[110px] flex-shrink-0">
               <p className="text-[10px] sm:text-xs uppercase text-muted-foreground truncate">{status}</p>
               <p className="text-lg sm:text-xl font-semibold">{value}</p>
             </div>

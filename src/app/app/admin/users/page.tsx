@@ -14,6 +14,7 @@ import { useAuthStore } from "@/store/auth-store";
 
 export default function AdminUsersPage() {
   const { user } = useAuthStore();
+  const canManageUsers = user?.role === "admin";
 
   const [deactivatedIds, setDeactivatedIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -38,7 +39,18 @@ export default function AdminUsersPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <PageHeader title="Users" subtitle="User directory across patient, doctor, and admin roles" />
+      <PageHeader
+        title="Users"
+        subtitle={canManageUsers ? "User directory across patient, doctor, and admin roles" : "User directory (view only)"}
+        action={
+          canManageUsers ? (
+            <Button>
+              <span className="hidden sm:inline">Create User</span>
+              <span className="sm:hidden">Create</span>
+            </Button>
+          ) : undefined
+        }
+      />
 
       {/* Location scope banner */}
       <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800/50 dark:bg-blue-900/20 px-4 py-3">
@@ -90,18 +102,24 @@ export default function AdminUsersPage() {
                       Open profile
                     </Button>
                   </Link>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() =>
-                      setDeactivatedIds((prev) =>
-                        prev.includes(user.id) ? prev.filter((id) => id !== user.id) : [...prev, user.id],
-                      )
-                    }
-                  >
-                    {user.active ? "Deactivate" : "Reactivate"}
-                  </Button>
+                  {canManageUsers ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() =>
+                        setDeactivatedIds((prev) =>
+                          prev.includes(user.id) ? prev.filter((id) => id !== user.id) : [...prev, user.id],
+                        )
+                      }
+                    >
+                      {user.active ? "Deactivate" : "Reactivate"}
+                    </Button>
+                  ) : (
+                    <Button variant="outline" size="sm" className="flex-1" disabled>
+                      View only
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -131,17 +149,21 @@ export default function AdminUsersPage() {
                 <Link href={`/app/admin/users/${row.id}`} className="text-primary hover:underline">
                   Open profile
                 </Link>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    setDeactivatedIds((prev) =>
-                      prev.includes(row.id) ? prev.filter((id) => id !== row.id) : [...prev, row.id],
-                    )
-                  }
-                >
-                  {row.active ? "Deactivate" : "Reactivate"}
-                </Button>
+                {canManageUsers ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setDeactivatedIds((prev) =>
+                        prev.includes(row.id) ? prev.filter((id) => id !== row.id) : [...prev, row.id],
+                      )
+                    }
+                  >
+                    {row.active ? "Deactivate" : "Reactivate"}
+                  </Button>
+                ) : (
+                  <span className="text-xs text-muted-foreground">View only</span>
+                )}
               </div>
             ),
           },

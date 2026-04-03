@@ -137,21 +137,21 @@ export function AppSidebar({ collapsed, onToggle }: { collapsed: boolean; onTogg
       <div className={cn("mb-4 flex items-center px-1", collapsed ? "flex-col gap-2" : "justify-between gap-2")}>
         {collapsed ? (
           <>
-            <div className="flex items-center justify-center p-1.5 rounded-lg bg-gradient-to-br from-green-500 to-lime-600">
+            <Link href="/app/admin" className="flex items-center justify-center p-1.5 rounded-lg bg-gradient-to-br from-green-500 to-lime-600 hover:from-green-600 hover:to-lime-700 transition-all">
               <Hospital className="h-5 w-5 text-white" />
-            </div>
+            </Link>
             <Button variant="ghost" size="icon" onClick={onToggle} className="h-7 w-7">
               <ChevronRight className="h-4 w-4" />
             </Button>
           </>
         ) : (
           <>
-            <div className="flex items-center gap-2 overflow-hidden">
+            <Link href="/app/admin" className="flex items-center gap-2 overflow-hidden hover:opacity-80 transition-opacity">
               <div className="p-1.5 rounded-lg bg-gradient-to-br from-green-500 to-lime-600">
                 <Hospital className="h-5 w-5 text-white" />
               </div>
               <span className="font-bold text-slate-800 dark:text-slate-100">NMSL App</span>
-            </div>
+            </Link>
             <Button variant="ghost" size="icon" onClick={onToggle}>
               <ChevronLeft className="h-4 w-4" />
             </Button>

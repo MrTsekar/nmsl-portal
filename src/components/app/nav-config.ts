@@ -2,7 +2,7 @@ import {
   BookUser,
   LayoutDashboard,
   Quote,
-  Settings,
+  User,
   Users,
   Briefcase,
   BarChart3,
@@ -23,13 +23,13 @@ type NavItem = {
 };
 
 export const primaryNavItems: NavItem[] = [
-  { label: "Dashboard", href: "/app/admin", icon: LayoutDashboard, roles: ["admin"] },
-  { label: "Users", href: "/app/admin/users", icon: Users, roles: ["admin"] },
-  { label: "Settings", href: "/app/admin/settings", icon: Settings, roles: ["admin"] },
+  { label: "Dashboard", href: "/app/admin", icon: LayoutDashboard, roles: ["admin", "appointment_officer"] },
+  { label: "Users", href: "/app/admin/users", icon: Users, roles: ["admin", "appointment_officer"] },
+  { label: "Profile", href: "/app/admin/settings", icon: User, roles: ["admin", "appointment_officer"] },
 ];
 
 export const websiteNavItems: NavItem[] = [
-  { label: "Appointments", href: "/app/admin/appointments", icon: Calendar, roles: ["admin"] },
+  { label: "Appointments", href: "/app/admin/appointments", icon: Calendar, roles: ["admin", "appointment_officer"] },
   { label: "Doctors", href: "/app/admin/doctors", icon: BookUser, roles: ["admin"] },
   { label: "Services", href: "/app/admin/services", icon: Briefcase, roles: ["admin"] },
   { label: "Partners", href: "/app/admin/partners", icon: Handshake, roles: ["admin"] },

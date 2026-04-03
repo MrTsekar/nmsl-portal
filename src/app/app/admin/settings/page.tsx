@@ -1,24 +1,64 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Camera } from "lucide-react";
-import { DataTable } from "@/components/shared/data-table";
+import { Camera, Eye, EyeOff, Save } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { SectionCard } from "@/components/shared/section-card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { mockResults } from "@/lib/mocks/data";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuthStore } from "@/store/auth-store";
+import { useNotificationStore } from "@/store/notification-store";
+import { NIGERIAN_STATES } from "@/lib/constants/states";
 
 export default function AdminSettingsPage() {
   const { user, updateUser } = useAuthStore();
+  const addNotification = useNotificationStore((state) => state.addNotification);
+  
   const [avatarPreview, setAvatarPreview] = useState<string | undefined>(undefined);
-  const [announcement, setAnnouncement] = useState("Routine maintenance every Sunday at 01:00 AM.");
-  const [announcementSaved, setAnnouncementSaved] = useState(false);
+  const [formData, setFormData] = useState({
+    name: user?.name || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
+    dateOfBirth: user?.dateOfBirth || "",
+    gender: user?.gender || "",
+    location: user?.location || "",
+    state: user?.state || "",
+    address: user?.address || "",
+  });
+  
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  });
+  
+  const [saving, setSaving] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || "",
+        email: user.email || "",
+        phone: user.phone || "",
+        dateOfBirth: user.dateOfBirth || "",
+        gender: user.gender || "",
+        location: user.location || "",
+        state: user.state || "",
+        address: user.address || "",
+      });
+    }
+  }, [user]);
 
   useEffect(() => {
     return () => {
@@ -27,7 +67,7 @@ export default function AdminSettingsPage() {
   }, [avatarPreview]);
 
   const displayAvatar = avatarPreview ?? user?.avatar;
-  const initials = user?.name?.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) ?? "AD";
+  const initials = user?.name?.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) ?? "U";
 
   const onUploadAvatar = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -36,131 +76,279 @@ export default function AdminSettingsPage() {
     const preview = URL.createObjectURL(file);
     setAvatarPreview(preview);
     updateUser({ avatar: preview });
+    addNotification({
+      type: "success",
+      message: "Profile photo updated successfully",
+    });
+  };
+
+  const handleSaveProfile = async () => {
+    setSaving(true);
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    updateUser(formData);
+    addNotification({
+      type: "success",
+      message: "Profile updated successfully",
+    });
+    setSaving(false);
+  };
+
+  const handleChangePassword = async () => {
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      addNotification({
+        type: "error",
+        message: "Please fill in all password fields",
+      });
+      return;
+    }
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      addNotification({
+        type: "error",
+        message: "New passwords do not match",
+      });
+      return;
+    }
+    if (passwordData.newPassword.length < 6) {
+      addNotification({
+        type: "error",
+        message: "Password must be at least 6 characters",
+      });
+      return;
+    }
+    
+    setChangingPassword(true);
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    addNotification({
+      type: "success",
+      message: "Password changed successfully",
+    });
+    setPasswordData({
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    });
+    setChangingPassword(false);
   };
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <PageHeader title="Admin Settings" subtitle="System-level controls and operational defaults" />
+      <PageHeader 
+        title="Profile"
+        subtitle="Manage your personal information and account settings"
+      />
 
-      <SectionCard title="Admin profile">
+      {/* Profile Photo Section */}
+      <SectionCard title="Profile Photo">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
           <div className="relative flex-shrink-0">
             <Avatar className="h-24 w-24 border-4 border-white dark:border-slate-700 shadow-xl ring-4 ring-green-100 dark:ring-green-900/50">
-              {displayAvatar ? <AvatarImage src={displayAvatar} alt="Admin avatar" /> : null}
+              {displayAvatar ? <AvatarImage src={displayAvatar} alt="Profile avatar" /> : null}
               <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-green-500 to-lime-600 text-white">{initials}</AvatarFallback>
             </Avatar>
           </div>
           <div className="flex flex-col items-center sm:items-start gap-3">
             <div className="text-center sm:text-left">
-              <p className="font-semibold text-base text-slate-900 dark:text-slate-100">{user?.name ?? "Admin"}</p>
-              <p className="text-sm text-muted-foreground">{user?.email ?? ""}</p>
-              <Badge variant="secondary" className="mt-1 capitalize">{user?.role ?? "admin"}</Badge>
+              <p className="font-semibold text-base text-slate-900 dark:text-slate-100">{user?.name || "User"}</p>
+              <p className="text-sm text-muted-foreground">{user?.email || ""}</p>
+              <Badge variant="secondary" className="mt-1 capitalize">{user?.role?.replace("_", " ") || "User"}</Badge>
             </div>
             <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-lime-600 hover:from-green-600 hover:to-lime-700 px-4 py-2 text-sm font-medium text-white shadow-md hover:shadow-lg transition-all duration-200">
               <Camera className="h-4 w-4" />
               Change profile photo
               <input type="file" accept="image/*" className="hidden" onChange={onUploadAvatar} />
             </label>
-            <p className="text-xs text-muted-foreground">PNG or JPG. Your photo appears in the sidebar and header.</p>
+            <p className="text-xs text-muted-foreground">PNG or JPG. Your photo appears throughout the application.</p>
           </div>
         </div>
       </SectionCard>
 
-      <SectionCard title="Platform configuration">
+      {/* Personal Information Section */}
+      <SectionCard title="Personal Information">
         <div className="grid gap-4 sm:gap-5 md:grid-cols-2">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">System notification email</label>
-            <Input className="h-10" defaultValue="noreply@nmsl.app" placeholder="noreply@example.com" />
-            <p className="text-xs text-muted-foreground">Sender address for automated emails (results, reminders, alerts)</p>
+          <div className="space-y-2">
+            <Label htmlFor="name">Full Name *</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="Enter your full name"
+              className="h-10"
+            />
           </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Default appointment slot duration (minutes)</label>
-            <Input className="h-10" defaultValue="15" type="number" min={5} step={5} placeholder="15" />
-            <p className="text-xs text-muted-foreground">Length of each bookable appointment slot</p>
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Default facility name</label>
-            <Input className="h-10" defaultValue="Main Campus" placeholder="e.g. Abuja Main Campus" />
-            <p className="text-xs text-muted-foreground">Shown when no specific location is set on a booking</p>
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Platform timezone</label>
-            <Input className="h-10" defaultValue="UTC+1" placeholder="UTC+1" />
-            <p className="text-xs text-muted-foreground">Nigeria Standard Time (WAT) — UTC+1</p>
-          </div>
-        </div>
-        <div className="mt-4 sm:mt-5">
-          <Button>Save configuration</Button>
-        </div>
-      </SectionCard>
 
-      <SectionCard title="Portal announcements">
-        <div className="space-y-3 sm:space-y-4">
-          <Textarea
-            value={announcement}
-            onChange={(event) => setAnnouncement(event.target.value)}
-            placeholder="Write a homepage announcement for all users"
-            className="min-h-[80px]"
-          />
-          <Button
-            onClick={() => {
-              setAnnouncementSaved(true);
-              window.setTimeout(() => setAnnouncementSaved(false), 1800);
-            }}
-          >
-            Publish announcement
+          <div className="space-y-2">
+            <Label htmlFor="email">Email Address *</Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              placeholder="your.email@example.com"
+              className="h-10"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="phone">Phone Number</Label>
+            <Input
+              id="phone"
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              placeholder="+234 XXX XXX XXXX"
+              className="h-10"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="dateOfBirth">Date of Birth</Label>
+            <Input
+              id="dateOfBirth"
+              type="date"
+              value={formData.dateOfBirth}
+              onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+              className="h-10"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="gender">Gender</Label>
+            <Select value={formData.gender} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
+              <SelectTrigger id="gender" className="h-10">
+                <SelectValue placeholder="Select gender" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="male">Male</SelectItem>
+                <SelectItem value="female">Female</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="location">Location/City *</Label>
+            <Input
+              id="location"
+              value={formData.location}
+              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+              placeholder="e.g., Abuja, Lagos"
+              className="h-10"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="state">State</Label>
+            <Select value={formData.state} onValueChange={(value) => setFormData({ ...formData, state: value })}>
+              <SelectTrigger id="state" className="h-10">
+                <SelectValue placeholder="Select state" />
+              </SelectTrigger>
+              <SelectContent className="max-h-[300px]">
+                {NIGERIAN_STATES.map((state) => (
+                  <SelectItem key={state} value={state}>
+                    {state}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="address">Address</Label>
+            <Input
+              id="address"
+              value={formData.address}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              placeholder="Enter your full address"
+              className="h-10"
+            />
+          </div>
+        </div>
+
+        <div className="mt-5 pt-4 border-t">
+          <Button onClick={handleSaveProfile} disabled={saving} className="min-w-[120px]">
+            <Save className="h-4 w-4 mr-2" />
+            {saving ? "Saving..." : "Save Changes"}
           </Button>
-          {announcementSaved ? <p className="text-sm text-green-600 dark:text-green-400">Announcement published.</p> : null}
         </div>
       </SectionCard>
 
-      <SectionCard title="Lab result email delivery queue">
-        {/* Mobile Card Layout */}
-        <div className="space-y-3 lg:hidden">
-          {mockResults.map((result, idx) => (
-            <Card key={idx}>
-              <CardContent className="p-4">
-                <div className="space-y-3">
-                  <div>
-                    <h3 className="font-semibold text-base">{result.patientName}</h3>
-                    <p className="text-sm text-muted-foreground mt-1">{result.testName}</p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Date</p>
-                      <p className="text-sm font-medium mt-1">{result.date}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Payment</p>
-                      <p className="text-sm font-medium mt-1">{result.status === "ready" ? "Paid" : "Pending payment"}</p>
-                    </div>
-                  </div>
-                  <Button variant="outline" size="sm" className="w-full">Send by email</Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+      {/* Security Section */}
+      <SectionCard title="Security">
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">Update your password to keep your account secure</p>
+          
+          <div className="grid gap-4 sm:gap-5 max-w-md">
+            <div className="space-y-2">
+              <Label htmlFor="currentPassword">Current Password</Label>
+              <div className="relative">
+                <Input
+                  id="currentPassword"
+                  type={showPasswords.current ? "text" : "password"}
+                  value={passwordData.currentPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                  placeholder="Enter current password"
+                  className="h-10 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPasswords.current ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
 
-        {/* Desktop Table */}
-        <div className="hidden lg:block">
-          <DataTable
-          data={mockResults.map((result) => ({
-            ...result,
-            paymentStatus: result.status === "ready" ? "Paid" : "Pending payment",
-          }))}
-          columns={[
-            { key: "patientName", header: "Patient" },
-            { key: "testName", header: "Result" },
-            { key: "date", header: "Date" },
-            { key: "paymentStatus", header: "Payment" },
-            {
-              key: "action",
-              header: "Action",
-              render: () => <Button variant="outline" size="sm">Send by email</Button>,
-            },
-          ]}
-          />
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">New Password</Label>
+              <div className="relative">
+                <Input
+                  id="newPassword"
+                  type={showPasswords.new ? "text" : "password"}
+                  value={passwordData.newPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                  placeholder="Enter new password"
+                  className="h-10 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPasswords.new ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm New Password</Label>
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={showPasswords.confirm ? "text" : "password"}
+                  value={passwordData.confirmPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                  placeholder="Confirm new password"
+                  className="h-10 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPasswords.confirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-2">
+            <Button onClick={handleChangePassword} disabled={changingPassword} variant="outline" className="min-w-[150px]">
+              {changingPassword ? "Changing..." : "Change Password"}
+            </Button>
+          </div>
         </div>
       </SectionCard>
     </div>

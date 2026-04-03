@@ -47,6 +47,18 @@ export const mockUsers: User[] = [
     dateOfBirth: "1985-11-08",
     gender: "male",
   },
+  {
+    id: "u-ao-1",
+    name: "Amina Bello",
+    email: "appointments@nmsl.app",
+    role: "appointment_officer",
+    location: "Abuja",
+    state: "FCT",
+    address: "NMSL Annex, Wuse Zone 5, Abuja",
+    phone: "+234 809 112 3344",
+    dateOfBirth: "1992-09-14",
+    gender: "female",
+  },
 ];
 
 export const mockNotifications: AppNotification[] = [
@@ -57,7 +69,7 @@ export const mockNotifications: AppNotification[] = [
     createdAt: "2h ago",
     read: false,
     category: "system",
-    roles: ["admin"],
+    roles: ["admin", "appointment_officer"],
   },
   {
     id: "n-2",
@@ -66,7 +78,7 @@ export const mockNotifications: AppNotification[] = [
     createdAt: "Today",
     read: true,
     category: "system",
-    roles: ["admin"],
+    roles: ["admin", "appointment_officer"],
   },
   {
     id: "n-3",

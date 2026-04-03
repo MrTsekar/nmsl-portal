@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Hospital } from "lucide-react";
 import { AppBreadcrumbs } from "@/components/app/app-breadcrumbs";
 import { AppHeader } from "@/components/app/app-header";
@@ -29,12 +30,16 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
         <SheetContent className="right-auto left-0 w-[85vw] max-w-xs border-r border-l-0 p-4">
           <SheetTitle className="sr-only">Mobile navigation menu</SheetTitle>
-          <div className="mb-4 flex items-center gap-2">
+          <Link
+            href="/app/admin"
+            onClick={() => setMobileMenuOpen(false)}
+            className="mb-4 flex items-center gap-2 hover:opacity-80 transition-opacity"
+          >
             <div className="p-1.5 rounded-lg bg-gradient-to-br from-green-500 to-lime-600">
               <Hospital className="h-4 w-4 text-white" />
             </div>
             <span className="font-semibold">NMSL App</span>
-          </div>
+          </Link>
           <AppSidebarNav collapsed={false} onNavigate={() => setMobileMenuOpen(false)} />
         </SheetContent>
       </Sheet>
