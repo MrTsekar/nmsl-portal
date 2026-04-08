@@ -32,7 +32,6 @@ export function FilterBar({
             <SelectItem value="confirmed">Confirmed</SelectItem>
             <SelectItem value="rescheduled">Rescheduled</SelectItem>
             <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="cancelled">Cancelled</SelectItem>
             <SelectItem value="rejected">Rejected</SelectItem>
           </SelectContent>
         </Select>

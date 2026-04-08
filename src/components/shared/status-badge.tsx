@@ -5,11 +5,12 @@ type Status = AppointmentStatus | ResultStatus;
 
 const variantMap: Record<Status, "warning" | "success" | "secondary" | "danger"> = {
   pending: "warning",
+  scheduled: "warning",
   confirmed: "success",
   rescheduled: "warning",
   completed: "success",
-  cancelled: "secondary",
   rejected: "danger",
+  "no-show": "secondary",
   ready: "success",
 };
 

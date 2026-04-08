@@ -1,107 +1,501 @@
-# NMSL App (Frontend UI)
+# NMSL Portal - Healthcare Management System
 
-High-fidelity healthcare product frontend for authenticated users across three roles: `patient`, `doctor`, and `admin`.
+Comprehensive healthcare management portal for **Nigerian Medical Services Limited (NMSL)**. This frontend application provides authenticated user management across two primary roles: **Admin** and **Appointment Officer**, with a focus on efficient appointment processing and tracking.
 
-This repository is **UI + integration scaffolding only**.
-Backend implementation is external and integrated via feature API clients.
+This repository contains the **Frontend UI + Mock Integration Layer**.  
+Backend implementation specification available in `NESTJS_BACKEND_SPECIFICATION.md`.
 
-## Stack
+---
 
-- Next.js (App Router) + TypeScript + Tailwind CSS
-- shadcn-style UI primitives + Lucide icons
-- React Query for server state
-- Zustand for auth/session client state
-- Zod + React Hook Form for form validation
-- Dark mode support via `next-themes`
+## 🚀 Key Features
 
-## Run locally
+### 🔒 **Appointment Locking System** (Critical Feature)
+- **Exclusive locks** prevent multiple officers from working on the same appointment
+- **Real-time countdown timer** (30:00 → 00:00) shows remaining lock time
+- **Admin override capability** - Admins can take over any locked appointment
+- **Auto-unlock after 30 minutes** of inactivity
+- **Visual indicators**: Timer changes to red and pulses when <5 minutes remain
+- **Conflict prevention**: Frontend polling every 15s + backend Redis locks
 
-1. Install dependencies:
+### 📊 **Audit Trail & Statistics**
+- Comprehensive audit logs tracking all appointment actions
+- Officer performance statistics (accepted, rejected, rescheduled, completed)
+- Date range filtering and officer-specific views
+- Activity dashboard with real-time metrics
 
+### 👥 **User Management**
+- Admin user management (create, activate/deactivate, password reset)
+- Appointment officer accounts with limited permissions
+- Role-based access control (RBAC)
+- Location-based filtering (Abuja, Lagos, Benin, Kaduna, Port Harcourt, Warri)
+
+### 👨‍⚕️ **Doctor Management**
+- Doctor profiles with specialties and qualifications
+- Flexible availability scheduling (uniform or custom time slots per day)
+- Location and specialty-based filtering
+- Active/inactive status management
+
+### 📅 **Appointment Processing**
+- Status workflow: pending → confirmed/rejected/rescheduled → completed/no-show
+- Appointment rescheduling with reason tracking
+- Doctor assignment
+- Urgent appointment flagging
+- Physical and Telemedicine visit types
+
+### 🏥 **Content Management**
+- Medical services catalog with categories
+- Trusted partners gallery
+- Board of directors management
+- Contact information updates
+- Homepage statistics management
+
+---
+
+## 🛠 Technology Stack
+
+- **Framework**: Next.js 16 (App Router) + React 19 + TypeScript 5
+- **Styling**: Tailwind CSS 4 + shadcn/ui primitives
+- **Icons**: Lucide React
+- **Data Fetching**: TanStack Query 5.90.21 (React Query)
+- **State Management**: Zustand 5 (auth/session)
+- **Forms**: React Hook Form 7 + Zod 4 (validation)
+- **UI Components**: Radix UI primitives
+- **Theme**: Dark mode support via next-themes
+- **API Client**: Axios 1.13.5
+
+---
+
+## 📦 Installation & Setup
+
+### Prerequisites
+- Node.js 20+
+- npm or yarn
+
+### 1. Install Dependencies
 ```bash
 npm install
 ```
 
-2. Copy environment variables:
+### 2. Environment Configuration
+Create a `.env.local` file:
 
-```bash
-cp .env.example .env.local
+```env
+# API Configuration
+NEXT_PUBLIC_API_BASE_URL=http://localhost:4000/api
+
+# Mock Mode (set to "false" to use live backend)
+NEXT_PUBLIC_USE_MOCKS=true
+
+# Feature Flags (optional)
+NEXT_PUBLIC_ENABLE_PREMIUM_THEME_TOGGLE=false
+NEXT_PUBLIC_ENABLE_ROLE_SWITCHER=false
 ```
 
-3. Start development server:
-
+### 3. Start Development Server
 ```bash
 npm run dev
 ```
 
-4. Open `http://localhost:3000`.
+Open [http://localhost:3000](http://localhost:3000)
 
-## Environment variables
+### 4. Default Login Credentials (Mock Mode)
 
-- `NEXT_PUBLIC_API_BASE_URL` - base URL for external backend API
-- `NEXT_PUBLIC_USE_MOCKS` - defaults to mock mode when unset; set to `false` only when you want to consume live API
-- `NEXT_PUBLIC_ENABLE_PREMIUM_THEME_TOGGLE` - enable premium theme toggle in profile menu (default `false`)
-- `NEXT_PUBLIC_ENABLE_ROLE_SWITCHER` - enable role switch actions in profile menu for admin-only testing (default `false`)
+**Admin User:**
+- Email: `admin@nmsl.app`
+- Password: any password (mock mode accepts any)
 
-## Route map
+**Appointment Officer:**
+- Email: `appointments@nmsl.app`
+- Password: any password (mock mode accepts any)
 
-### Auth
+---
 
-- `/sign-in`
-- `/sign-up`
-- `/forgot-password`
-- `/reset-password`
-- `/complete-profile`
+## 🗂 Project Structure
 
-### Shared authenticated
+```
+src/
+├── app/                          # Next.js App Router pages
+│   ├── (auth)/                   # Authentication routes
+│   │   ├── sign-in/
+│   │   ├── sign-up/
+│   │   ├── forgot-password/
+│   │   └── reset-password/
+│   └── app/                      # Authenticated app routes
+│       └── admin/                # Admin dashboard routes
+│           ├── appointments/     # Appointment management
+│           ├── board-members/    # Board of directors
+│           ├── contact/          # Contact info management
+│           ├── doctors/          # Doctor management
+│           ├── partners/         # Trusted partners
+│           ├── services/         # Medical services
+│           ├── settings/         # Admin settings
+│           ├── statistics/       # Homepage stats
+│           ├── testimonials/     # Patient testimonials
+│           └── users/            # User management
+│
+├── components/
+│   ├── admin/                    # Admin-specific components
+│   │   ├── audit-statistics.tsx # Audit dashboard
+│   │   ├── create-doctor-dialog.tsx
+│   │   ├── assign-doctor-dialog.tsx
+│   │   └── reschedule-appointment-dialog.tsx
+│   ├── app/                      # App shell components
+│   │   ├── app-layout.tsx       # Main layout wrapper
+│   │   ├── app-sidebar.tsx      # Navigation sidebar
+│   │   ├── app-header.tsx       # Top header
+│   │   ├── auth-guard.tsx       # Route protection
+│   │   └── role-guard.tsx       # Role-based access
+│   ├── shared/                   # Reusable domain components
+│   │   ├── data-table.tsx
+│   │   ├── status-badge.tsx
+│   │   ├── stat-card.tsx
+│   │   ├── filter-bar.tsx
+│   │   ├── page-header.tsx
+│   │   └── ...
+│   └── ui/                       # shadcn/ui primitives
+│       ├── button.tsx
+│       ├── dialog.tsx
+│       ├── input.tsx
+│       └── ...
+│
+├── hooks/
+│   └── use-app-data.ts          # React Query hooks
+│
+├── lib/
+│   ├── api/                      # API client layer
+│   │   ├── admin.api.ts         # Admin endpoints
+│   │   ├── auth.api.ts          # Authentication
+│   │   ├── users.api.ts         # User management
+│   │   ├── services.api.ts      # Medical services
+│   │   ├── partners.api.ts      # Partners
+│   │   ├── board-members.api.ts # Board members
+│   │   ├── contact.api.ts       # Contact info
+│   │   ├── statistics.api.ts    # Statistics
+│   │   ├── client.ts            # Axios instance
+│   │   └── request.ts           # Mock fallback wrapper
+│   ├── mocks/
+│   │   ├── data.ts              # Mock datasets
+│   │   └── handlers.ts          # Mock API handlers
+│   ├── constants/
+│   │   ├── locations.ts         # Nigerian locations
+│   │   └── states.ts            # Nigerian states
+│   └── utils.ts                 # Utility functions
+│
+├── store/
+│   ├── auth-store.ts            # Zustand auth state
+│   ├── notification-store.ts    # Notifications
+│   └── ui-store.ts              # UI state
+│
+└── types/
+    └── index.ts                 # TypeScript type definitions
+```
 
-- `/app/overview`
-- `/app/appointments`
-- `/app/appointments/[id]`
-- `/app/profile`
+---
 
-### Patient
+## 🛣 Route Map
 
-- `/app/patient/dashboard`
-- `/app/patient/medical-results`
-- `/app/patient/prescriptions`
-- `/app/patient/doctors`
-- `/app/patient/doctors/[id]`
-- `/app/chat`
-- `/app/chat/[appointmentId]`
+### 🔓 **Public Routes**
+- `/sign-in` - User authentication
+- `/sign-up` - User registration
+- `/forgot-password` - Password reset request
+- `/reset-password` - Password reset with token
 
-### Doctor
+### 🔐 **Authenticated Routes** (Admin & Appointment Officer)
 
-- `/app/doctor/dashboard`
-- `/app/doctor/schedule`
-- `/app/doctor/patients`
-- `/app/doctor/prescriptions`
-- `/app/doctor/chat`
-- `/app/chat`
-- `/app/chat/[appointmentId]`
+#### **Dashboard**
+- `/app/admin` - Admin dashboard with KPIs
 
-### Admin
+#### **Appointment Management** (Core Feature)
+- `/app/admin/appointments` - Appointment processing with locking system
+  - **Tabs**: Appointment Management | Audit & Statistics
+  - **Actions**: Accept, Reject, Reschedule
+  - **Lock System**: Radio button selection → 30-minute countdown timer
+  - **Real-time Sync**: 15-second polling for conflict prevention
 
-- `/app/admin/users`
-- `/app/admin/users/[id]`
-- `/app/admin/doctors`
-- `/app/admin/testimonials`
-- `/app/admin/settings`
+#### **User & Doctor Management**
+- `/app/admin/users` - User list and management
+- `/app/admin/users/[id]` - User details
+- `/app/admin/doctors` - Doctor management with availability scheduling
 
-## Project structure
+#### **Content Management**
+- `/app/admin/services` - Medical services CRUD
+- `/app/admin/partners` - Trusted partners management
+- `/app/admin/board-members` - Board of directors
+- `/app/admin/testimonials` - Patient testimonials
+- `/app/admin/contact` - Contact information
+- `/app/admin/statistics` - Homepage statistics
 
-- `src/app` - route pages/layouts
-- `src/components/app` - app shell (sidebar, header, breadcrumbs, guards)
-- `src/components/shared` - reusable domain components (StatCard, StatusBadge, DataTable, etc.)
-- `src/components/ui` - reusable shadcn-style primitives
-- `src/components/dashboards` - role-specific dashboard content blocks
-- `src/lib/api` - API client + per-feature service modules
-- `src/lib/mocks` - mock datasets + mock handlers
-- `src/hooks` - React Query data hooks
-- `src/store` - Zustand auth/session store
+#### **Settings**
+- `/app/admin/settings` - Admin settings and preferences
 
-## Notes
+---
 
-- Route protection is frontend-only and modular, so it can be replaced with backend auth/session later.
-- Screens include loading, empty, and error states for data views and are responsive for desktop/tablet/mobile.
-- Optional premium hospital theme pack is available from the profile dropdown (`Enable premium theme`) and applies tokenized palette plus card/chart variants without changing route structure.
+## 🔑 Key Components & Patterns
+
+### **Appointment Locking Flow**
+```typescript
+// 1. User clicks radio button
+handleLockToggle(appointmentId)
+
+// 2. API call with admin flag
+lockMutation.mutate({ 
+  id: appointmentId, 
+  officerEmail: user.email,
+  isAdmin: user.role === "admin" 
+})
+
+// 3. Timer starts counting down from 30:00
+{lockedAppointmentId === appointment.id && (
+  <CountdownTimer 
+    lockedAt={appointment.lockedAt}
+    onExpire={handleAutoUnlock}
+  />
+)}
+
+// 4. Auto-unlock on action or 30-minute expiry
+unlockMutation.mutate({ id, officerEmail })
+```
+
+### **Real-Time Sync**
+```typescript
+useAppointments({
+  refetchInterval: 15000,              // Poll every 15s
+  refetchIntervalInBackground: true,   // Continue in background
+  refetchOnWindowFocus: true,          // Refresh on focus
+  staleTime: 10000                     // Consider stale after 10s
+})
+```
+
+### **Role-Based Route Protection**
+```typescript
+<RoleGuard allowedRoles={["admin", "appointment_officer"]}>
+  <AppointmentsPage />
+</RoleGuard>
+```
+
+---
+
+## 🎨 UI/UX Features
+
+- **Responsive Design**: Mobile, tablet, and desktop optimized
+- **Dark Mode**: Full dark theme support
+- **Loading States**: Skeleton screens and spinners
+- **Empty States**: Helpful empty state messages
+- **Error Handling**: User-friendly error messages with auto-dismiss
+- **Toast Notifications**: Success/error feedback
+- **Optimistic Updates**: Immediate UI feedback with rollback
+- **Keyboard Navigation**: Full keyboard accessibility
+
+---
+
+## 🧪 Mock Data System
+
+The app includes a comprehensive mock data layer for development:
+
+- **Mock API Handlers**: Simulate backend responses with realistic delays
+- **Data Persistence**: Mock data updates persist within session
+- **Fallback Pattern**: Automatically uses mocks when backend unavailable
+- **Sample Data**: Includes users, doctors, appointments, services, partners, board members
+
+### Mock Data Includes:
+- 4 users (3 admins + 1 appointment officer)
+- 5 doctors across different specialties
+- 10+ appointments in various states
+- 3 medical services
+- 11 trusted partners
+- 7 board members
+- Contact information
+- 6 homepage statistics
+
+---
+
+## 🔧 Available Scripts
+
+```bash
+# Development
+npm run dev          # Start development server (port 3000)
+
+# Production
+npm run build        # Build for production
+npm run start        # Start production server
+
+# Code Quality
+npm run lint         # Run ESLint
+```
+
+---
+
+## 🌐 API Integration
+
+### Mock Mode (Default)
+Set in `.env.local`:
+```env
+NEXT_PUBLIC_USE_MOCKS=true
+```
+Uses local mock handlers with simulated delays.
+
+### Live Backend Mode
+Set in `.env.local`:
+```env
+NEXT_PUBLIC_USE_MOCKS=false
+NEXT_PUBLIC_API_BASE_URL=http://localhost:4000/api
+```
+Connects to real NestJS backend. See `NESTJS_BACKEND_SPECIFICATION.md` for backend setup.
+
+### API Client Pattern
+```typescript
+// Automatic fallback to mocks
+export const adminApi = {
+  lockAppointment: async (id, email, isAdmin) => {
+    return withMockFallback({
+      live: async () => {
+        const { data } = await apiClient.post(`/admin/appointments/${id}/lock`, 
+          { officerEmail: email, isAdmin }
+        );
+        return data;
+      },
+      mock: () => mockHandlers.admin.lockAppointment(id, email, isAdmin)
+    });
+  }
+};
+```
+
+---
+
+## 📝 Type Definitions
+
+Key TypeScript types in `src/types/index.ts`:
+
+```typescript
+type Role = "admin" | "appointment_officer";
+
+type AppointmentStatus = 
+  | "pending" 
+  | "scheduled" 
+  | "confirmed" 
+  | "rescheduled" 
+  | "rejected" 
+  | "completed" 
+  | "no-show";
+
+interface Appointment {
+  id: string;
+  patientName: string;
+  doctorName: string;
+  date: string;
+  time: string;
+  status: AppointmentStatus;
+  location: string;
+  specialty: MedicalSpecialty;
+  visitType: "Physical" | "Telemedicine";
+  lockedBy?: string;      // Email of officer who locked it
+  lockedAt?: string;      // ISO timestamp of lock
+  // ... more fields
+}
+
+interface AuditLog {
+  id: string;
+  appointmentId: string;
+  patientName: string;
+  action: "accepted" | "rejected" | "rescheduled" | "completed";
+  performedBy: string;    // Officer email
+  performedByName: string;
+  performedAt: string;
+  details?: string;
+}
+
+interface OfficerStatistics {
+  officerEmail: string;
+  officerName: string;
+  totalProcessed: number;
+  accepted: number;
+  rejected: number;
+  rescheduled: number;
+  completed: number;
+  lastActive?: string;
+}
+```
+
+---
+
+## 🚀 Deployment
+
+### Vercel (Recommended)
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel
+```
+
+### Docker
+```dockerfile
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+EXPOSE 3000
+CMD ["npm", "start"]
+```
+
+---
+
+## 📚 Additional Documentation
+
+- **Backend Specification**: See `NESTJS_BACKEND_SPECIFICATION.md` for complete NestJS backend implementation guide
+- **API Endpoints**: Full REST API documentation in backend spec
+- **Database Schema**: Complete entity definitions with relationships
+- **Authentication**: JWT-based auth with role-based access control
+
+---
+
+## 🤝 Contributing
+
+1. Create a feature branch
+2. Make changes
+3. Test thoroughly (especially appointment locking system)
+4. Submit pull request
+
+---
+
+## 📄 License
+
+Proprietary - Nigerian Medical Services Limited (NMSL)
+
+---
+
+## 🐛 Known Issues & Future Enhancements
+
+### Planned Features
+- Email notifications for appointment updates
+- SMS reminders for appointments
+- Patient portal for self-booking
+- Doctor portal for schedule management
+- Advanced analytics dashboard
+- PDF report generation for audit logs
+- Bulk appointment import/export
+
+### Technical Debt
+- Add comprehensive unit tests
+- Add E2E tests for appointment locking workflow
+- Implement WebSocket for real-time lock updates (replace polling)
+- Add Redis integration for distributed locks in production
+- Implement proper error boundary components
+- Add performance monitoring (Sentry/DataDog)
+
+---
+
+## 💡 Tips for Development
+
+1. **Appointment Lock Testing**: Use multiple browser tabs/windows with different user emails to test lock conflicts
+2. **Mock Data**: Modify `src/lib/mocks/data.ts` to add more test scenarios
+3. **Role Testing**: Use profile dropdown to switch roles in development
+4. **API Inspection**: Check Network tab to see mock API responses
+5. **Timer Testing**: Adjust `getTimeRemaining()` values to test urgency states
+
+---
+
+**Built with ❤️ for NMSL by the Development Team**

@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/api/client";
 import { withMockFallback } from "@/lib/api/request";
 import { mockHandlers } from "@/lib/mocks/handlers";
-import type { User, Appointment } from "@/types";
+import type { User, Appointment, DoctorAvailabilitySchedule } from "@/types";
 
 export const adminApi = {
   getKpis: async () => {
@@ -42,6 +42,16 @@ export const adminApi = {
         return data;
       },
       mock: () => mockHandlers.admin.createDoctor(payload),
+    });
+  },
+
+  updateDoctorAvailability: async (doctorId: string, schedule: DoctorAvailabilitySchedule) => {
+    return withMockFallback({
+      live: async () => {
+        const { data } = await apiClient.patch(`/admin/doctors/${doctorId}/availability`, schedule);
+        return data;
+      },
+      mock: () => mockHandlers.admin.updateDoctorAvailability(doctorId, schedule),
     });
   },
 
@@ -130,7 +140,7 @@ export const adminApi = {
 
   rescheduleAppointment: async (
     id: string,
-    payload: { date: string; time: string; rescheduleReason?: string },
+    payload: { date: string; time: string; doctorId: string; rescheduleReason?: string },
   ): Promise<Appointment> => {
     return withMockFallback({
       live: async () => {
@@ -138,6 +148,65 @@ export const adminApi = {
         return data;
       },
       mock: () => mockHandlers.admin.rescheduleAppointment(id, payload),
+    });
+  },
+
+  assignDoctor: async (
+    id: string,
+    doctorId: string,
+    timeSlot: string,
+  ): Promise<Appointment> => {
+    return withMockFallback({
+      live: async () => {
+        const { data } = await apiClient.patch(`/admin/appointments/${id}/assign-doctor`, {
+          doctorId,
+          timeSlot,
+        });
+        return data;
+      },
+      mock: () => mockHandlers.admin.assignDoctor(id, doctorId, timeSlot),
+    });
+  },
+
+  // Appointment Locking
+  lockAppointment: async (id: string, officerEmail: string, isAdmin?: boolean): Promise<Appointment> => {
+    return withMockFallback({
+      live: async () => {
+        const { data } = await apiClient.post(`/admin/appointments/${id}/lock`, { officerEmail, isAdmin });
+        return data;
+      },
+      mock: () => mockHandlers.admin.lockAppointment(id, officerEmail, isAdmin),
+    });
+  },
+
+  unlockAppointment: async (id: string, officerEmail: string): Promise<Appointment> => {
+    return withMockFallback({
+      live: async () => {
+        const { data } = await apiClient.post(`/admin/appointments/${id}/unlock`, { officerEmail });
+        return data;
+      },
+      mock: () => mockHandlers.admin.unlockAppointment(id, officerEmail),
+    });
+  },
+
+  // Audit & Statistics
+  getAuditLogs: async (params?: { startDate?: string; endDate?: string; officer?: string }) => {
+    return withMockFallback({
+      live: async () => {
+        const { data } = await apiClient.get("/admin/audit/logs", { params });
+        return data;
+      },
+      mock: () => mockHandlers.admin.getAuditLogs(params),
+    });
+  },
+
+  getOfficerStatistics: async (params?: { startDate?: string; endDate?: string }) => {
+    return withMockFallback({
+      live: async () => {
+        const { data } = await apiClient.get("/admin/audit/statistics", { params });
+        return data;
+      },
+      mock: () => mockHandlers.admin.getOfficerStatistics(params),
     });
   },
 

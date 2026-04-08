@@ -1,6 +1,7 @@
 import type { Role } from "@/types";
 import {
   mockUsers,
+  mockDoctors,
   mockServices,
   mockStatistics,
   mockAppointments,
@@ -55,8 +56,17 @@ export const mockHandlers = {
     // Doctor Management
     listDoctors: async (params?: { location?: string; specialty?: string }) => {
       await delay();
-      // Doctors are separate from admin users - return empty for now
-      return [];
+      let doctors = [...mockDoctors];
+      
+      if (params?.location) {
+        doctors = doctors.filter((d) => d.location === params.location);
+      }
+      
+      if (params?.specialty) {
+        doctors = doctors.filter((d) => d.specialty === params.specialty);
+      }
+      
+      return doctors;
     },
     
     createDoctor: async (payload: any) => {
@@ -76,6 +86,15 @@ export const mockHandlers = {
           specialty: payload.specialty,
         },
       };
+    },
+
+    updateDoctorAvailability: async (doctorId: string, schedule: any) => {
+      await delay();
+      const index = mockDoctors.findIndex((d) => d.id === doctorId);
+      if (index !== -1) {
+        mockDoctors[index].availabilitySchedule = schedule;
+      }
+      return { success: true, doctor: mockDoctors[index] };
     },
     
     // Admin Management
@@ -237,8 +256,30 @@ export const mockHandlers = {
 
     rescheduleAppointment: async (
       id: string,
-      payload: { date: string; time: string; rescheduleReason?: string },
+      payload: { date: string; time: string; doctorId: string; rescheduleReason?: string },
     ) => {
+      await delay();
+      const index = mockAppointments.findIndex((apt) => apt.id === id);
+      if (index === -1) {
+        throw new Error("Appointment not found");
+      }
+
+      // Find doctor name from doctorId
+      const doctor = mockDoctors.find((d) => d.id === payload.doctorId);
+
+      mockAppointments[index] = {
+        ...mockAppointments[index],
+        date: payload.date,
+        time: payload.time,
+        doctorName: doctor?.name ?? mockAppointments[index].doctorName,
+        rescheduleReason: payload.rescheduleReason,
+        status: "rescheduled",
+      };
+
+      return { ...mockAppointments[index] };
+    },
+
+    assignDoctor: async (id: string, doctorId: string, timeSlot: string) => {
       await delay();
       const index = mockAppointments.findIndex((apt) => apt.id === id);
       if (index === -1) {
@@ -247,13 +288,131 @@ export const mockHandlers = {
 
       mockAppointments[index] = {
         ...mockAppointments[index],
-        date: payload.date,
-        time: payload.time,
-        rescheduleReason: payload.rescheduleReason,
-        status: "rescheduled",
+        time: timeSlot,
+        status: "confirmed",
       };
 
       return { ...mockAppointments[index] };
+    },
+
+    // Appointment Locking
+    lockAppointment: async (id: string, officerEmail: string, isAdmin?: boolean) => {
+      await delay();
+      const index = mockAppointments.findIndex((apt) => apt.id === id);
+      if (index === -1) {
+        throw new Error("Appointment not found");
+      }
+
+      const appointment = mockAppointments[index];
+      
+      // Check if lock is stale (>30 minutes) and auto-clear it
+      if (appointment.lockedBy && appointment.lockedAt) {
+        const lockTime = new Date(appointment.lockedAt).getTime();
+        const now = Date.now();
+        const thirtyMinutes = 30 * 60 * 1000;
+        if ((now - lockTime) > thirtyMinutes) {
+          console.log("Auto-clearing stale lock");
+          appointment.lockedBy = undefined;
+          appointment.lockedAt = undefined;
+        }
+      }
+
+      // Check if already locked by someone else
+      // Admins can override any lock
+      if (appointment.lockedBy && appointment.lockedBy !== officerEmail && !isAdmin) {
+        throw new Error(`Appointment is already being processed by ${appointment.lockedBy}`);
+      }
+
+      // If admin is taking over, log it
+      if (isAdmin && appointment.lockedBy && appointment.lockedBy !== officerEmail) {
+        console.log(`Admin override: ${officerEmail} taking over from ${appointment.lockedBy}`);
+      }
+
+      mockAppointments[index] = {
+        ...mockAppointments[index],
+        lockedBy: officerEmail,
+        lockedAt: new Date().toISOString(),
+      };
+
+      return { ...mockAppointments[index] };
+    },
+
+    unlockAppointment: async (id: string, officerEmail: string) => {
+      await delay();
+      const index = mockAppointments.findIndex((apt) => apt.id === id);
+      if (index === -1) {
+        throw new Error("Appointment not found");
+      }
+
+      // Only the officer who locked it can unlock (or force unlock in admin)
+      if (mockAppointments[index].lockedBy !== officerEmail) {
+        console.warn("Officer attempting to unlock appointment they didn't lock");
+      }
+
+      mockAppointments[index] = {
+        ...mockAppointments[index],
+        lockedBy: undefined,
+        lockedAt: undefined,
+      };
+
+      return { ...mockAppointments[index] };
+    },
+
+    // Audit & Statistics
+    getAuditLogs: async (params?: { startDate?: string; endDate?: string; officer?: string }) => {
+      await delay();
+      // Generate mock audit logs from appointments
+      const logs = mockAppointments
+        .filter((apt) => apt.status !== "pending" && apt.status !== "scheduled")
+        .map((apt, idx) => {
+          // Map status to action
+          let action: any = apt.status;
+          if (apt.status === "confirmed") action = "accepted";
+          
+          return {
+            id: `audit-${apt.id}`,
+            appointmentId: apt.id,
+            patientName: apt.patientName,
+            action,
+            performedBy: apt.lockedBy || `officer${(idx % 3) + 1}@nmsl.com`,
+            performedAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+            details: apt.rescheduleReason || (apt.status === "rejected" ? "Request does not meet criteria" : undefined),
+          };
+        });
+
+      // Filter by officer if specified
+      const filteredLogs = params?.officer 
+        ? logs.filter(log => log.performedBy === params.officer)
+        : logs;
+
+      return { logs: filteredLogs, total: filteredLogs.length };
+    },
+
+    getOfficerStatistics: async (params?: { startDate?: string; endDate?: string }) => {
+      await delay();
+      
+      // Generate mock statistics for 3 officers
+      const officers = [
+        { email: "officer1@nmsl.com", name: "Sarah Johnson" },
+        { email: "officer2@nmsl.com", name: "Michael Chen" },
+        { email: "officer3@nmsl.com", name: "Amina Okafor" },
+      ];
+
+      const statistics = officers.map((officer, idx) => {
+        const base = 20 + idx * 5;
+        return {
+          officerEmail: officer.email,
+          officerName: officer.name,
+          totalProcessed: base + Math.floor(Math.random() * 10),
+          accepted: Math.floor(base * 0.6),
+          rejected: Math.floor(base * 0.17),
+          rescheduled: Math.floor(base * 0.15),
+          completed: Math.floor(base * 0.08),
+          lastActive: new Date(Date.now() - Math.random() * 2 * 60 * 60 * 1000).toISOString(),
+        };
+      });
+
+      return { statistics, total: statistics.length };
     },
   },
   

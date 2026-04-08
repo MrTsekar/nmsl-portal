@@ -12,6 +12,21 @@ export type MedicalSpecialty =
   | "Radiology"
   | "Surgery";
 
+export type DayOfWeek = "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday";
+
+export interface TimeSlot {
+  start: string;
+  end: string;
+}
+
+export interface DoctorAvailabilitySchedule {
+  doctorId: string;
+  days: DayOfWeek[];
+  useUniformTime: boolean;
+  uniformTime?: TimeSlot;
+  customTimes?: Record<DayOfWeek, TimeSlot>;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -38,6 +53,7 @@ export interface Doctor {
   qualifications?: string;
   avatar?: string;
   isActive?: boolean;
+  availabilitySchedule?: DoctorAvailabilitySchedule;
 }
 
 // Patient/User representation for admin management
@@ -56,7 +72,6 @@ export type AppointmentStatus =
   | "scheduled"
   | "confirmed"
   | "rescheduled"
-  | "cancelled"
   | "rejected"
   | "completed"
   | "no-show";
@@ -79,9 +94,38 @@ export interface Appointment {
   additionalComment?: string;
   isUrgent?: boolean;
   rescheduleReason?: string;
+  lockedBy?: string; // Email or ID of officer currently working on this
+  lockedAt?: string; // Timestamp when locked
 }
 
 export type ResultStatus = "pending" | "ready" | "rejected";
+
+export type AuditAction = 
+  | "accepted"
+  | "rejected"
+  | "rescheduled"
+  | "completed";
+
+export interface AuditLog {
+  id: string;
+  appointmentId: string;
+  patientName: string;
+  action: AuditAction;
+  performedBy: string; // Officer email or name
+  performedAt: string; // Timestamp
+  details?: string; // Additional info like reschedule reason
+}
+
+export interface OfficerStatistics {
+  officerEmail: string;
+  officerName: string;
+  totalProcessed: number;
+  accepted: number;
+  rejected: number;
+  rescheduled: number;
+  completed: number;
+  lastActive?: string;
+}
 
 export interface AppNotification {
   id: string;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Search, Plus, MapPin } from "lucide-react";
 import { DataTable } from "@/components/shared/data-table";
 import { PageHeader } from "@/components/shared/page-header";
@@ -9,30 +10,38 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { CreateDoctorDialog } from "@/components/admin/create-doctor-dialog";
+import { DoctorAvailabilityDialog, DoctorAvailability } from "@/components/admin/doctor-availability-dialog";
 import { useAuthStore } from "@/store/auth-store";
-
-const doctors = [
-  { id: "d-1", name: "Dr. Ken Wu", specialty: "Internal Medicine", qualifications: "MBBS, FMCGP", location: "Lagos", status: "Active" },
-  { id: "d-2", name: "Dr. Zahra Ali", specialty: "Cardiology", qualifications: "MBBS, FWACP", location: "Lagos", status: "Active" },
-  { id: "d-3", name: "Dr. Ngozi Okafor", specialty: "Gynecology", qualifications: "MBBS, FWACS", location: "Abuja", status: "Active" },
-  { id: "d-4", name: "Dr. Ahmed Bello", specialty: "Physiotherapy", qualifications: "MBBS, MSc PT", location: "Port Harcourt", status: "Active" },
-  { id: "d-5", name: "Dr. Chioma Eze", specialty: "Pediatrics", qualifications: "MBBS, MWACP", location: "Lagos", status: "Active" },
-];
+import { useDoctors } from "@/hooks/use-app-data";
+import { adminApi } from "@/lib/api/admin.api";
+import { LoadState } from "@/components/shared/load-state";
+import { ErrorState } from "@/components/shared/error-state";
 
 export default function AdminDoctorsPage() {
   const { user } = useAuthStore();
+  const queryClient = useQueryClient();
+  const doctors = useDoctors();
 
-  const [availability, setAvailability] = useState<Record<string, boolean>>({});
   const [deactivatedIds, setDeactivatedIds] = useState<string[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAvailabilityDialogOpen, setIsAvailabilityDialogOpen] = useState(false);
+  const [selectedDoctor, setSelectedDoctor] = useState<{ id: string; name: string } | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const availabilityMutation = useMutation({
+    mutationFn: ({ doctorId, schedule }: { doctorId: string; schedule: DoctorAvailability }) =>
+      adminApi.updateDoctorAvailability(doctorId, schedule),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["doctors"] });
+    },
+  });
+
   const rows = useMemo(() => {
-    const allDoctors = doctors.map((doctor) => ({
+    const allDoctors = (doctors.data ?? []).map((doctor) => ({
       ...doctor,
-      available: availability[doctor.id] ?? true,
-      active: !deactivatedIds.includes(doctor.id),
+      available: doctor.availabilitySchedule ? doctor.availabilitySchedule.days.length > 0 : false,
+      active: doctor.isActive ?? true,
     }));
 
     if (!searchQuery.trim()) return allDoctors;
@@ -42,16 +51,33 @@ export default function AdminDoctorsPage() {
       (doctor) =>
         doctor.name.toLowerCase().includes(query) ||
         doctor.specialty.toLowerCase().includes(query) ||
-        doctor.qualifications.toLowerCase().includes(query) ||
-        doctor.location.toLowerCase().includes(query) ||
-        doctor.status.toLowerCase().includes(query)
+        (doctor.qualifications ?? "").toLowerCase().includes(query) ||
+        doctor.location.toLowerCase().includes(query)
     );
-  }, [availability, deactivatedIds, searchQuery]);
+  }, [doctors.data, searchQuery]);
 
   const handleDoctorCreated = () => {
     setSuccessMessage("Doctor account created successfully!");
     setTimeout(() => setSuccessMessage(null), 5000);
   };
+
+  const handleOpenAvailabilityDialog = (doctorId: string, doctorName: string) => {
+    setSelectedDoctor({ id: doctorId, name: doctorName });
+    setIsAvailabilityDialogOpen(true);
+  };
+
+  const handleSaveAvailability = (availabilityData: DoctorAvailability) => {
+    availabilityMutation.mutate({
+      doctorId: availabilityData.doctorId,
+      schedule: availabilityData,
+    });
+
+    setSuccessMessage(`Availability updated for ${selectedDoctor?.name}`);
+    setTimeout(() => setSuccessMessage(null), 5000);
+  };
+
+  if (doctors.isLoading) return <LoadState />;
+  if (doctors.isError) return <ErrorState message="Could not load doctors." />;
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -123,10 +149,10 @@ export default function AdminDoctorsPage() {
                     variant="outline"
                     size="sm"
                     className="w-full"
-                    onClick={() => setAvailability((prev) => ({ ...prev, [doctor.id]: !(prev[doctor.id] ?? true) }))}
+                    onClick={() => handleOpenAvailabilityDialog(doctor.id, doctor.name)}
                     disabled={!doctor.active}
                   >
-                    {doctor.available ? "Mark unavailable" : "Restore availability"}
+                    Availability
                   </Button>
                   <Button
                     variant="outline"
@@ -174,10 +200,10 @@ export default function AdminDoctorsPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setAvailability((prev) => ({ ...prev, [row.id]: !(prev[row.id] ?? true) }))}
+                  onClick={() => handleOpenAvailabilityDialog(row.id, row.name)}
                   disabled={!row.active}
                 >
-                  {row.available ? "Mark unavailable" : "Restore availability"}
+                  Availability
                 </Button>
                 <Button
                   variant="outline"
@@ -202,6 +228,16 @@ export default function AdminDoctorsPage() {
         onOpenChange={setIsDialogOpen}
         onSuccess={handleDoctorCreated}
       />
+
+      {selectedDoctor && (
+        <DoctorAvailabilityDialog
+          open={isAvailabilityDialogOpen}
+          onOpenChange={setIsAvailabilityDialogOpen}
+          doctorId={selectedDoctor.id}
+          doctorName={selectedDoctor.name}
+          onSave={handleSaveAvailability}
+        />
+      )}
     </div>
   );
 }
