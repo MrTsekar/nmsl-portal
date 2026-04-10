@@ -337,21 +337,21 @@ export default function AdminAppointmentsPage() {
       />
 
       <Tabs defaultValue="appointments" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 lg:w-auto">
-          <TabsTrigger value="appointments" className="gap-2 text-base">
-            <CheckCircle2 className="h-4 w-4" />
-            Appointment Management
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="appointments" className="gap-1.5 text-xs sm:text-sm">
+            <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">Management</span>
             {pendingCount > 0 && (
-              <span className="ml-1 inline-flex items-center justify-center rounded-full bg-blue-600 dark:bg-blue-500 px-2 py-0.5 text-xs font-semibold text-white">
+              <span className="ml-1 inline-flex shrink-0 items-center justify-center rounded-full bg-blue-600 dark:bg-blue-500 px-1.5 py-0.5 text-xs font-semibold text-white">
                 {pendingCount}
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="audit" className="gap-2 text-base">
-            <BarChart3 className="h-4 w-4" />
-            Audit & Statistics
+          <TabsTrigger value="audit" className="gap-1.5 text-xs sm:text-sm">
+            <BarChart3 className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">Audit & Stats</span>
             {processedCount > 0 && (
-              <span className="ml-1 inline-flex items-center justify-center rounded-full bg-green-600 dark:bg-green-500 px-2 py-0.5 text-xs font-semibold text-white">
+              <span className="ml-1 inline-flex shrink-0 items-center justify-center rounded-full bg-green-600 dark:bg-green-500 px-1.5 py-0.5 text-xs font-semibold text-white">
                 {processedCount}
               </span>
             )}

@@ -9,7 +9,10 @@ export const adminApi = {
 
   listDoctors: async (params?: { location?: string; specialty?: string }) => {
     const { data } = await apiClient.get("/admin/doctors", { params });
-    return Array.isArray(data) ? data : [];
+    if (Array.isArray(data)) return data;
+    if (data?.doctors && Array.isArray(data.doctors)) return data.doctors;
+    if (data?.data && Array.isArray(data.data)) return data.data;
+    return [];
   },
 
   createDoctor: async (payload: {
