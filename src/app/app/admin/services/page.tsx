@@ -129,9 +129,13 @@ export default function AdminServicesPage() {
     const file = event.target.files?.[0];
     if (!file) return;
     if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
-    const url = URL.createObjectURL(file);
-    objectUrlRef.current = url;
-    setForm((prev) => ({ ...prev, [field]: url }));
+    // Convert to base64 so the image persists when saved to backend
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      setForm((prev) => ({ ...prev, [field]: base64 }));
+    };
+    reader.readAsDataURL(file);
     event.target.value = "";
   };
 
