@@ -62,8 +62,16 @@ export function CreateAdminDialog({ open, onOpenChange, onSuccess }: CreateAdmin
       form.reset();
       onOpenChange(false);
       onSuccess?.();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create admin account");
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number; data?: { message?: string } } })?.response?.status;
+      const serverMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      if (status === 409) {
+        setError("A user with this email already exists.");
+      } else if (serverMsg) {
+        setError(serverMsg);
+      } else {
+        setError("Failed to create account. Please try again.");
+      }
     } finally {
       setIsSubmitting(false);
     }
