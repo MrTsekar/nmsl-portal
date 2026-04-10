@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { adminApi } from "@/lib/api/admin.api";
 import { usersApi } from "@/lib/api/users.api";
-import type { User, Appointment, Doctor } from "@/types";
+import { testimonialsApi } from "@/lib/api/testimonials.api";
+import type { User, Appointment, Doctor, Testimonial } from "@/types";
 
 export const useUsers = () =>
   useQuery<User[]>({
@@ -40,4 +41,10 @@ export const useDoctors = (params?: { location?: string; specialty?: string }) =
   useQuery<Doctor[]>({
     queryKey: ["doctors", params],
     queryFn: () => adminApi.listDoctors(params),
+  });
+
+export const useTestimonials = () =>
+  useQuery<Testimonial[]>({
+    queryKey: ["testimonials"],
+    queryFn: testimonialsApi.list,
   });

@@ -213,3 +213,14 @@ export interface ContactInfo {
   emergencyHours: string;
   updatedAt: string;
 }
+
+export interface Testimonial {
+  id: string;
+  patientName: string;
+  patientCategory: "Staff" | "Retiree" | "Dependent";
+  title: string;
+  message: string;
+  serviceType: "Physical Appointment" | "Telemedicine";
+  createdAt: string;
+  updatedAt: string;
+}
