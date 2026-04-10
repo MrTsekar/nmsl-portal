@@ -35,8 +35,15 @@ export default function SignInPage() {
       localStorage.setItem("nmsl-token", response.token);
       setSession(response);
       router.push("/app/admin");
-    } catch {
-      setCredentialError("Wrong Credentials");
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { status?: number } };
+      if (!axiosErr.response) {
+        setCredentialError("Unable to reach the server. Check your connection or try again shortly.");
+      } else if (axiosErr.response.status === 401 || axiosErr.response.status === 403) {
+        setCredentialError("Wrong Credentials");
+      } else {
+        setCredentialError("Something went wrong. Please try again.");
+      }
     }
   };
 
