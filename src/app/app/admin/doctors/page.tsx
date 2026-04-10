@@ -69,6 +69,7 @@ export default function AdminDoctorsPage() {
   }, [doctors.data, searchQuery]);
 
   const handleDoctorCreated = () => {
+    queryClient.invalidateQueries({ queryKey: ["doctors"] });
     setSuccessMessage("Doctor account created successfully!");
     setTimeout(() => setSuccessMessage(null), 5000);
   };

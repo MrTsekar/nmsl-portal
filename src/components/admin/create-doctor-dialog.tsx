@@ -96,8 +96,15 @@ export function CreateDoctorDialog({ open, onOpenChange, onSuccess }: CreateDoct
       form.reset();
       onOpenChange(false);
       onSuccess?.();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create doctor account");
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { status?: number; data?: { message?: string } } };
+      if (axiosErr.response?.status === 409) {
+        setError("A doctor with this email already exists.");
+      } else if (axiosErr.response?.data?.message) {
+        setError(axiosErr.response.data.message);
+      } else {
+        setError("Failed to create doctor account. Please try again.");
+      }
     } finally {
       setIsSubmitting(false);
     }
