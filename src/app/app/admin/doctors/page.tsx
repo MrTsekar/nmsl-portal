@@ -28,6 +28,7 @@ export default function AdminDoctorsPage() {
   const [selectedDoctor, setSelectedDoctor] = useState<{ id: string; name: string; availabilitySchedule?: any } | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [availabilityError, setAvailabilityError] = useState<string | null>(null);
 
   const availabilityMutation = useMutation({
     mutationFn: ({ doctorId, schedule }: { doctorId: string; schedule: DoctorAvailability }) =>
@@ -35,8 +36,20 @@ export default function AdminDoctorsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["doctors"] });
       setIsAvailabilityDialogOpen(false);
+      setAvailabilityError(null);
       setSuccessMessage(`Availability updated for ${selectedDoctor?.name}`);
       setTimeout(() => setSuccessMessage(null), 5000);
+    },
+    onError: (err: unknown) => {
+      const axiosErr = err as { response?: { status?: number; data?: { message?: string } } };
+      if (axiosErr.response?.status === 404) {
+        setAvailabilityError("Availability update is not yet supported by the server. Please try again later.");
+      } else if (axiosErr.response?.data?.message) {
+        setAvailabilityError(axiosErr.response.data.message);
+      } else {
+        setAvailabilityError("Failed to update availability. Please try again.");
+      }
+      setTimeout(() => setAvailabilityError(null), 6000);
     },
   });
 
@@ -118,6 +131,12 @@ export default function AdminDoctorsPage() {
       {successMessage && (
         <div className="p-3 sm:p-4 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 rounded-lg text-sm sm:text-base">
           {successMessage}
+        </div>
+      )}
+
+      {availabilityError && (
+        <div className="p-3 sm:p-4 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 rounded-lg text-sm sm:text-base">
+          {availabilityError}
         </div>
       )}
       
