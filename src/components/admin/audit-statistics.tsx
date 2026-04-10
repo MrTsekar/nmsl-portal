@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { StatCard } from "@/components/shared/stat-card";
 import { LoadState } from "@/components/shared/load-state";
-import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/shared/empty-state";
 import { adminApi } from "@/lib/api/admin.api";
 import type { OfficerStatistics, AuditLog } from "@/types";
@@ -97,15 +96,13 @@ export function AuditStatistics({ className }: AuditStatisticsProps) {
   }, [statistics]);
 
   const isLoading = statisticsQuery.isLoading || auditLogsQuery.isLoading;
-  const isError = statisticsQuery.isError || auditLogsQuery.isError;
 
   if (isLoading) return <LoadState />;
-  if (isError) return <ErrorState message="Could not load audit statistics." />;
 
   return (
     <div className={`space-y-6 ${className ?? ""}`}>
       {/* Overview Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <StatCard
           title="Total Processed"
           value={totalStats.totalProcessed}
@@ -135,7 +132,7 @@ export function AuditStatistics({ className }: AuditStatisticsProps) {
 
       {/* Filters */}
       <Card className="p-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div>
             <Label htmlFor="officer-filter" className="text-sm font-medium mb-1.5 block">
               Filter by Officer
@@ -257,43 +254,66 @@ export function AuditStatistics({ className }: AuditStatisticsProps) {
             description="No activity recorded for the selected filters." 
           />
         ) : (
-          <Card className="overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-slate-50/70 dark:bg-slate-900/40 border-b border-border">
-                  <tr>
-                    <th className="text-left px-4 py-3 font-semibold">Timestamp</th>
-                    <th className="text-left px-4 py-3 font-semibold">Patient</th>
-                    <th className="text-left px-4 py-3 font-semibold">Action</th>
-                    <th className="text-left px-4 py-3 font-semibold">Officer</th>
-                    <th className="text-left px-4 py-3 font-semibold">Details</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {auditLogs.map((log) => (
-                    <tr key={log.id} className="border-b border-border last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-900/20">
-                      <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
-                        {formatDateTime(log.performedAt)}
-                      </td>
-                      <td className="px-4 py-3 font-medium">{log.patientName}</td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${actionColors[log.action] ?? ""}`}>
-                          {log.action === "accepted" && <CheckCircle2 className="h-3.5 w-3.5" />}
-                          {log.action === "rejected" && <XCircle className="h-3.5 w-3.5" />}
-                          {log.action === "rescheduled" && <RefreshCcw className="h-3.5 w-3.5" />}
-                          {log.action.charAt(0).toUpperCase() + log.action.slice(1)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground">{log.performedBy}</td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground max-w-xs truncate">
-                        {log.details || "-"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <>
+            {/* Mobile card layout */}
+            <div className="space-y-3 md:hidden">
+              {auditLogs.map((log) => (
+                <Card key={log.id} className="p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${actionColors[log.action] ?? ""}`}>
+                      {log.action === "accepted" && <CheckCircle2 className="h-3.5 w-3.5" />}
+                      {log.action === "rejected" && <XCircle className="h-3.5 w-3.5" />}
+                      {log.action === "rescheduled" && <RefreshCcw className="h-3.5 w-3.5" />}
+                      {log.action.charAt(0).toUpperCase() + log.action.slice(1)}
+                    </span>
+                    <span className="text-xs text-muted-foreground">{formatTimeAgo(log.performedAt)}</span>
+                  </div>
+                  <p className="font-medium text-sm">{log.patientName}</p>
+                  <p className="text-xs text-muted-foreground">{log.performedBy}</p>
+                  {log.details && <p className="text-xs text-muted-foreground border-t pt-2">{log.details}</p>}
+                </Card>
+              ))}
             </div>
-          </Card>
+
+            {/* Desktop table */}
+            <Card className="overflow-hidden hidden md:block">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50/70 dark:bg-slate-900/40 border-b border-border">
+                    <tr>
+                      <th className="text-left px-4 py-3 font-semibold">Timestamp</th>
+                      <th className="text-left px-4 py-3 font-semibold">Patient</th>
+                      <th className="text-left px-4 py-3 font-semibold">Action</th>
+                      <th className="text-left px-4 py-3 font-semibold">Officer</th>
+                      <th className="text-left px-4 py-3 font-semibold">Details</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {auditLogs.map((log) => (
+                      <tr key={log.id} className="border-b border-border last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-900/20">
+                        <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
+                          {formatDateTime(log.performedAt)}
+                        </td>
+                        <td className="px-4 py-3 font-medium">{log.patientName}</td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${actionColors[log.action] ?? ""}`}>
+                            {log.action === "accepted" && <CheckCircle2 className="h-3.5 w-3.5" />}
+                            {log.action === "rejected" && <XCircle className="h-3.5 w-3.5" />}
+                            {log.action === "rescheduled" && <RefreshCcw className="h-3.5 w-3.5" />}
+                            {log.action.charAt(0).toUpperCase() + log.action.slice(1)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">{log.performedBy}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground max-w-xs truncate">
+                          {log.details || "-"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          </>
         )}
       </div>
     </div>

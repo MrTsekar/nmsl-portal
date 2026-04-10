@@ -97,13 +97,21 @@ export const adminApi = {
   },
 
   getAuditLogs: async (params?: { startDate?: string; endDate?: string; officer?: string }) => {
-    const { data } = await apiClient.get("/admin/audit/logs", { params });
-    return data;
+    try {
+      const { data } = await apiClient.get("/admin/audit/logs", { params });
+      return data ?? { logs: [], total: 0 };
+    } catch {
+      return { logs: [], total: 0 };
+    }
   },
 
   getOfficerStatistics: async (params?: { startDate?: string; endDate?: string }) => {
-    const { data } = await apiClient.get("/admin/audit/statistics", { params });
-    return data;
+    try {
+      const { data } = await apiClient.get("/admin/audit/statistics", { params });
+      return data ?? { statistics: [] };
+    } catch {
+      return { statistics: [] };
+    }
   },
 
   listUsers: async (params?: { role?: string; location?: string }): Promise<User[]> => {
