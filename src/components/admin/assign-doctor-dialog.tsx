@@ -21,7 +21,7 @@ interface Doctor {
   name: string;
   specialty: string;
   location: string;
-  qualifications: string;
+  qualifications?: string;
   availabilitySchedule?: DoctorAvailabilitySchedule;
 }
 
@@ -380,9 +380,11 @@ export function AssignDoctorDialog({
                                   </Badge>
                                 )}
                               </div>
-                              <p className="text-sm text-muted-foreground mb-2">
-                                {doctor.qualifications}
-                              </p>
+                              {doctor.qualifications && (
+                                <p className="text-sm text-muted-foreground mb-2">
+                                  {doctor.qualifications}
+                                </p>
+                              )}
                               <div className="flex flex-wrap items-center gap-2">
                                 <Badge variant="secondary" className="text-xs">
                                   {doctor.specialty}
