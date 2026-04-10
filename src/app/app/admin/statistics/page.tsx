@@ -34,6 +34,13 @@ function StatIcon({ name, className }: { name: Statistic["icon"]; className?: st
   return <Icon className={className} />;
 }
 
+const DEFAULT_STATS: Statistic[] = [
+  { id: "default-1", value: "0", label: "Years of Service", sublabel: "Serving since 1978", icon: "clock" },
+  { id: "default-2", value: "0", label: "Locations Nationwide", sublabel: "Across Nigeria", icon: "building" },
+  { id: "default-3", value: "0", label: "Staff Enrolled", sublabel: "Active beneficiaries", icon: "users" },
+  { id: "default-4", value: "0", label: "Certified Standard", sublabel: "ISO 9001:2015", icon: "award" },
+];
+
 export default function AdminStatisticsPage() {
   const [stats, setStats] = useState<Statistic[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,7 +49,7 @@ export default function AdminStatisticsPage() {
 
   useEffect(() => {
     statisticsApi.list().then((data) => {
-      setStats(data);
+      setStats(data.length > 0 ? data : DEFAULT_STATS);
       setLoading(false);
     });
   }, []);
