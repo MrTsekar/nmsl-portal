@@ -8,6 +8,8 @@ type AuthState = {
   token: string | null;
   user: User | null;
   isAuthenticated: boolean;
+  _hasHydrated: boolean;
+  setHasHydrated: (state: boolean) => void;
   setSession: (payload: { token: string; user: User }) => void;
   updateUser: (patch: Partial<User>) => void;
   switchRole: (role: Role) => void;
@@ -33,6 +35,10 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       user: null,
       isAuthenticated: false,
+      _hasHydrated: false,
+      setHasHydrated: (state) => {
+        set({ _hasHydrated: state });
+      },
       setSession: ({ token, user }) => {
         console.log("🔐 Setting session:", { token: token?.substring(0, 20) + "...", user: user.email });
         set({ token, user, isAuthenticated: true });
@@ -67,6 +73,7 @@ export const useAuthStore = create<AuthState>()(
               hasUser: !!state?.user,
               isAuthenticated: state?.isAuthenticated,
             });
+            state?.setHasHydrated(true);
           }
         };
       },
