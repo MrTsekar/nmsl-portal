@@ -32,7 +32,6 @@ export default function SignInPage() {
     setCredentialError(null);
     try {
       const response = await authApi.signIn(values);
-      localStorage.setItem("nmsl-token", response.token);
       setSession(response);
       router.push("/app/admin");
     } catch (err: unknown) {

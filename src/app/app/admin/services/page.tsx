@@ -162,9 +162,27 @@ export default function AdminServicesPage() {
     if (!form.name.trim() || !form.shortDescription.trim()) return;
     setSaving(true);
     const serviceLocation = editingLocation || adminLocation;
+    
+    // Prepare payload - remove IDs from new key services
+    const keyServicesPayload = form.keyServices.map(({ title, description }) => ({
+      title,
+      description,
+    }));
+    
+    const payload = {
+      name: form.name,
+      category: form.category,
+      location: serviceLocation,
+      shortDescription: form.shortDescription,
+      fullDescription: form.fullDescription,
+      bannerImageUrl: form.bannerImageUrl,
+      iconImageUrl: form.iconImageUrl,
+      keyServices: keyServicesPayload,
+    };
+    
     try {
       if (editingId) {
-        const updated = await servicesApi.update(editingId, { ...form, location: serviceLocation });
+        const updated = await servicesApi.update(editingId, payload);
         setServices((prev) => prev.map((s) => (s.id === editingId ? updated : s)));
         addNotification({
           id: Date.now().toString(),
@@ -176,7 +194,7 @@ export default function AdminServicesPage() {
           roles: ["admin"],
         });
       } else {
-        const created = await servicesApi.create({ ...form, location: serviceLocation });
+        const created = await servicesApi.create(payload);
         setServices((prev) => [created, ...prev]);
         addNotification({
           id: Date.now().toString(),
@@ -268,8 +286,8 @@ export default function AdminServicesPage() {
           <div className="space-y-5 pt-1">
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1 sm:col-span-2">
-                <Label>Service Name *</Label>
-                <Input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="e.g. Cardiology Services" />
+                <Label htmlFor="service-name">Service Name *</Label>
+                <Input id="service-name" name="serviceName" autoComplete="off" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="e.g. Cardiology Services" />
               </div>
               <div className="space-y-1">
                 <Label>Category *</Label>
@@ -283,13 +301,13 @@ export default function AdminServicesPage() {
             </div>
 
             <div className="space-y-1">
-              <Label>Short Description * <span className="text-xs text-muted-foreground">(shown on service card)</span></Label>
-              <Input value={form.shortDescription} onChange={(e) => setForm((p) => ({ ...p, shortDescription: e.target.value }))} placeholder="One-line summary" />
+              <Label htmlFor="short-description">Short Description * <span className="text-xs text-muted-foreground">(shown on service card)</span></Label>
+              <Input id="short-description" name="shortDescription" autoComplete="off" value={form.shortDescription} onChange={(e) => setForm((p) => ({ ...p, shortDescription: e.target.value }))} placeholder="One-line summary" />
             </div>
 
             <div className="space-y-1">
-              <Label>Full Description <span className="text-xs text-muted-foreground">(shown on service detail page)</span></Label>
-              <Textarea rows={4} value={form.fullDescription} onChange={(e) => setForm((p) => ({ ...p, fullDescription: e.target.value }))} placeholder="Detailed description..." />
+              <Label htmlFor="full-description">Full Description <span className="text-xs text-muted-foreground">(shown on service detail page)</span></Label>
+              <Textarea id="full-description" name="fullDescription" autoComplete="off" rows={4} value={form.fullDescription} onChange={(e) => setForm((p) => ({ ...p, fullDescription: e.target.value }))} placeholder="Detailed description..." />
             </div>
 
             {/* Images */}
@@ -358,12 +376,12 @@ export default function AdminServicesPage() {
               )}
               <div className="flex gap-2 items-end">
                 <div className="flex-1 space-y-1">
-                  <span className="text-xs text-muted-foreground">Title</span>
-                  <Input value={ksTitle} onChange={(e) => setKsTitle(e.target.value)} placeholder="e.g. General Anaesthesia" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addKeyService(); } }} />
+                  <Label htmlFor="ks-title" className="text-xs text-muted-foreground">Title</Label>
+                  <Input id="ks-title" name="keyServiceTitle" autoComplete="off" value={ksTitle} onChange={(e) => setKsTitle(e.target.value)} placeholder="e.g. General Anaesthesia" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addKeyService(); } }} />
                 </div>
                 <div className="flex-1 space-y-1">
-                  <span className="text-xs text-muted-foreground">Description (optional)</span>
-                  <Input value={ksDesc} onChange={(e) => setKsDesc(e.target.value)} placeholder="Short description" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addKeyService(); } }} />
+                  <Label htmlFor="ks-desc" className="text-xs text-muted-foreground">Description (optional)</Label>
+                  <Input id="ks-desc" name="keyServiceDescription" autoComplete="off" value={ksDesc} onChange={(e) => setKsDesc(e.target.value)} placeholder="Short description" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addKeyService(); } }} />
                 </div>
                 <Button type="button" variant="outline" size="icon" className="shrink-0" onClick={addKeyService}>
                   <Plus className="h-4 w-4" />

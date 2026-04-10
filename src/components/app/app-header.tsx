@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Bell, Menu, Moon, Search, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -18,6 +19,7 @@ import { useAuthStore } from "@/store/auth-store";
 import { useUiStore } from "@/store/ui-store";
 
 export function AppHeader({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) {
+  const router = useRouter();
   const { setTheme, theme } = useTheme();
   const { user, signOut, switchRole } = useAuthStore();
   const { premiumTheme, togglePremiumTheme } = useUiStore();
@@ -25,6 +27,11 @@ export function AppHeader({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void 
   const { notifications: allNotifications } = useNotificationStore();
   const notifications = allNotifications.filter((item) => (user ? item.roles.includes(user.role) : false));
   const unreadNotifications = notifications.filter((item) => !item.read);
+
+  const handleSignOut = () => {
+    signOut();
+    router.push("/sign-in");
+  };
 
   return (
     <header className="flex flex-wrap items-center gap-2 border-b border-border/50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg px-4 py-3 md:gap-3 md:px-6 shadow-sm">
@@ -133,7 +140,7 @@ export function AppHeader({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void 
                 <DropdownMenuItem onClick={() => switchRole("admin")}>Switch to admin</DropdownMenuItem>
               </>
             ) : null}
-            <DropdownMenuItem onClick={signOut}>Sign out</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleSignOut}>Sign out</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

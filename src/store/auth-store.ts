@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import type { Role, User } from "@/types";
 
 type AuthState = {
@@ -26,20 +27,33 @@ const defaultAdminUser: User = {
   gender: "male",
 };
 
-export const useAuthStore = create<AuthState>((set) => ({
-  token: null,
-  user: null,
-  isAuthenticated: false,
-  setSession: ({ token, user }) => set({ token, user, isAuthenticated: true }),
-  updateUser: (patch) =>
-    set((state) => ({
-      user: state.user ? { ...state.user, ...patch } : state.user,
-    })),
-  switchRole: (role) =>
-    set((state) => {
-      return state.user
-        ? { user: { ...state.user, role } }
-        : { user: { ...defaultAdminUser, role }, token: "mock-token", isAuthenticated: true };
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      token: null,
+      user: null,
+      isAuthenticated: false,
+      setSession: ({ token, user }) => {
+        localStorage.setItem("nmsl-token", token);
+        set({ token, user, isAuthenticated: true });
+      },
+      updateUser: (patch) =>
+        set((state) => ({
+          user: state.user ? { ...state.user, ...patch } : state.user,
+        })),
+      switchRole: (role) =>
+        set((state) => {
+          return state.user
+            ? { user: { ...state.user, role } }
+            : { user: { ...defaultAdminUser, role }, token: "mock-token", isAuthenticated: true };
+        }),
+      signOut: () => {
+        localStorage.removeItem("nmsl-token");
+        set({ token: null, user: null, isAuthenticated: false });
+      },
     }),
-  signOut: () => set({ token: null, user: null, isAuthenticated: false }),
-}));
+    {
+      name: "nmsl-auth-storage",
+    }
+  )
+);
