@@ -10,7 +10,8 @@ export const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
-  if (typeof window !== "undefined") {
+  const isAuthRoute = config.url?.startsWith("/auth/");
+  if (!isAuthRoute && typeof window !== "undefined") {
     const token = window.localStorage.getItem("nmsl-token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
