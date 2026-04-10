@@ -163,26 +163,19 @@ export default function AdminServicesPage() {
     setSaving(true);
     const serviceLocation = editingLocation || adminLocation;
     
-    // Prepare payload - remove IDs from new key services
-    const keyServicesPayload = form.keyServices.map(({ title, description }) => ({
-      title,
-      description,
-    }));
-    
-    const payload = {
-      name: form.name,
-      category: form.category,
-      location: serviceLocation,
-      shortDescription: form.shortDescription,
-      fullDescription: form.fullDescription,
-      bannerImageUrl: form.bannerImageUrl,
-      iconImageUrl: form.iconImageUrl,
-      keyServices: keyServicesPayload,
-    };
-    
     try {
       if (editingId) {
-        const updated = await servicesApi.update(editingId, payload);
+        // For updates, send the full payload including existing IDs
+        const updated = await servicesApi.update(editingId, {
+          name: form.name,
+          category: form.category,
+          location: serviceLocation,
+          shortDescription: form.shortDescription,
+          fullDescription: form.fullDescription,
+          bannerImageUrl: form.bannerImageUrl,
+          iconImageUrl: form.iconImageUrl,
+          keyServices: form.keyServices,
+        });
         setServices((prev) => prev.map((s) => (s.id === editingId ? updated : s)));
         addNotification({
           id: Date.now().toString(),
@@ -194,7 +187,22 @@ export default function AdminServicesPage() {
           roles: ["admin"],
         });
       } else {
-        const created = await servicesApi.create(payload);
+        // For creation, strip IDs from keyServices (backend generates them)
+        const keyServicesPayload = form.keyServices.map(({ title, description }) => ({
+          title,
+          description,
+        }));
+        
+        const created = await servicesApi.create({
+          name: form.name,
+          category: form.category,
+          location: serviceLocation,
+          shortDescription: form.shortDescription,
+          fullDescription: form.fullDescription,
+          bannerImageUrl: form.bannerImageUrl,
+          iconImageUrl: form.iconImageUrl,
+          keyServices: keyServicesPayload,
+        });
         setServices((prev) => [created, ...prev]);
         addNotification({
           id: Date.now().toString(),
