@@ -19,7 +19,16 @@ export default function AdminSettingsPage() {
   const addNotification = useNotificationStore((state) => state.addNotification);
   
   const [avatarPreview, setAvatarPreview] = useState<string | undefined>(undefined);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    email: string;
+    phone: string;
+    dateOfBirth: string;
+    gender: "female" | "male" | "other" | "";
+    location: string;
+    state: string;
+    address: string;
+  }>({
     name: user?.name || "",
     email: user?.email || "",
     phone: user?.phone || "",
@@ -77,8 +86,13 @@ export default function AdminSettingsPage() {
     setAvatarPreview(preview);
     updateUser({ avatar: preview });
     addNotification({
-      type: "success",
+      id: Date.now().toString(),
+      title: "Success",
       message: "Profile photo updated successfully",
+      createdAt: new Date().toISOString(),
+      read: false,
+      category: "system",
+      roles: ["admin", "appointment_officer"],
     });
   };
 
@@ -86,10 +100,18 @@ export default function AdminSettingsPage() {
     setSaving(true);
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    updateUser(formData);
+    updateUser({
+      ...formData,
+      gender: formData.gender || undefined,
+    });
     addNotification({
-      type: "success",
+      id: Date.now().toString(),
+      title: "Success",
       message: "Profile updated successfully",
+      createdAt: new Date().toISOString(),
+      read: false,
+      category: "system",
+      roles: ["admin", "appointment_officer"],
     });
     setSaving(false);
   };
@@ -97,22 +119,37 @@ export default function AdminSettingsPage() {
   const handleChangePassword = async () => {
     if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
       addNotification({
-        type: "error",
+        id: Date.now().toString(),
+        title: "Error",
         message: "Please fill in all password fields",
+        createdAt: new Date().toISOString(),
+        read: false,
+        category: "system",
+        roles: ["admin", "appointment_officer"],
       });
       return;
     }
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       addNotification({
-        type: "error",
+        id: Date.now().toString(),
+        title: "Error",
         message: "New passwords do not match",
+        createdAt: new Date().toISOString(),
+        read: false,
+        category: "system",
+        roles: ["admin", "appointment_officer"],
       });
       return;
     }
     if (passwordData.newPassword.length < 6) {
       addNotification({
-        type: "error",
+        id: Date.now().toString(),
+        title: "Error",
         message: "Password must be at least 6 characters",
+        createdAt: new Date().toISOString(),
+        read: false,
+        category: "system",
+        roles: ["admin", "appointment_officer"],
       });
       return;
     }
@@ -121,8 +158,13 @@ export default function AdminSettingsPage() {
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
     addNotification({
-      type: "success",
+      id: Date.now().toString(),
+      title: "Success",
       message: "Password changed successfully",
+      createdAt: new Date().toISOString(),
+      read: false,
+      category: "system",
+      roles: ["admin", "appointment_officer"],
     });
     setPasswordData({
       currentPassword: "",
@@ -215,7 +257,7 @@ export default function AdminSettingsPage() {
 
           <div className="space-y-2">
             <Label htmlFor="gender">Gender</Label>
-            <Select value={formData.gender} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
+            <Select value={formData.gender} onValueChange={(value) => setFormData({ ...formData, gender: value as "female" | "male" | "other" })}>
               <SelectTrigger id="gender" className="h-10">
                 <SelectValue placeholder="Select gender" />
               </SelectTrigger>

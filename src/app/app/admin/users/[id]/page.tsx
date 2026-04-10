@@ -46,14 +46,24 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
     try {
       const result = await adminApi.resetUserPassword(id);
       addNotification({
-        type: "success",
+        id: Date.now().toString(),
+        title: "Success",
         message: result.message,
+        createdAt: new Date().toISOString(),
+        read: false,
+        category: "system",
+        roles: ["admin", "appointment_officer"],
       });
       setResetPasswordOpen(false);
     } catch (error) {
       addNotification({
-        type: "error",
+        id: Date.now().toString(),
+        title: "Error",
         message: "Failed to send password reset link",
+        createdAt: new Date().toISOString(),
+        read: false,
+        category: "system",
+        roles: ["admin", "appointment_officer"],
       });
     } finally {
       setResetLoading(false);
@@ -63,8 +73,13 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
   const handleUpdateEmail = async () => {
     if (!newEmail.trim() || !newEmail.includes("@")) {
       addNotification({
-        type: "error",
+        id: Date.now().toString(),
+        title: "Error",
         message: "Please enter a valid email address",
+        createdAt: new Date().toISOString(),
+        read: false,
+        category: "system",
+        roles: ["admin", "appointment_officer"],
       });
       return;
     }
@@ -72,8 +87,13 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
     try {
       const result = await adminApi.updateUserEmail(id, newEmail);
       addNotification({
-        type: "success",
+        id: Date.now().toString(),
+        title: "Success",
         message: result.message,
+        createdAt: new Date().toISOString(),
+        read: false,
+        category: "system",
+        roles: ["admin", "appointment_officer"],
       });
       setEditEmailOpen(false);
       setNewEmail("");
@@ -81,8 +101,13 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
       query.refetch();
     } catch (error) {
       addNotification({
-        type: "error",
+        id: Date.now().toString(),
+        title: "Error",
         message: "Failed to update email address",
+        createdAt: new Date().toISOString(),
+        read: false,
+        category: "system",
+        roles: ["admin", "appointment_officer"],
       });
     } finally {
       setEmailLoading(false);
