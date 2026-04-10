@@ -9,17 +9,21 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/store/auth-store";
 import { useUsers } from "@/hooks/use-app-data";
 import { LoadState } from "@/components/shared/load-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { CreateAdminDialog } from "@/components/admin/create-admin-dialog";
 
 export default function AdminUsersPage() {
   const { user } = useAuthStore();
+  const queryClient = useQueryClient();
   const canManageUsers = user?.role === "admin";
   const usersQuery = useUsers();
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const rows = useMemo(() => {
     const allUsers = usersQuery.data ?? [];
@@ -41,7 +45,7 @@ export default function AdminUsersPage() {
         subtitle={canManageUsers ? "User directory across patient, doctor, and admin roles" : "User directory (view only)"}
         action={
           canManageUsers ? (
-            <Button>
+            <Button onClick={() => setIsCreateOpen(true)}>
               <span className="hidden sm:inline">Create User</span>
               <span className="sm:hidden">Create</span>
             </Button>
@@ -55,6 +59,12 @@ export default function AdminUsersPage() {
           Viewing all users across all NMSL facilities.
         </p>
       </div>
+
+      <CreateAdminDialog
+        open={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ["users"] })}
+      />
 
       {usersQuery.isLoading && <LoadState />}
       {usersQuery.isError && <ErrorState message="Could not fetch users from the server." />}
