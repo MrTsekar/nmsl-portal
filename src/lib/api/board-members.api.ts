@@ -4,12 +4,12 @@ import type { BoardMember } from "@/types";
 export const boardMembersApi = {
   list: async (): Promise<BoardMember[]> => {
     const { data } = await apiClient.get("/board-members");
-    return data;
+    return Array.isArray(data) ? data : [];
   },
 
   listAll: async (): Promise<BoardMember[]> => {
     const { data } = await apiClient.get("/admin/board-members");
-    return data;
+    return Array.isArray(data) ? data : [];
   },
 
   create: async (payload: Omit<BoardMember, "id" | "createdAt" | "updatedAt">): Promise<BoardMember> => {

@@ -4,7 +4,7 @@ import type { Statistic } from "@/types";
 export const statisticsApi = {
   list: async (): Promise<Statistic[]> => {
     const { data } = await apiClient.get("/admin/statistics");
-    return data;
+    return Array.isArray(data) ? data : [];
   },
 
   updateAll: async (stats: Statistic[]): Promise<Statistic[]> => {

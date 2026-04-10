@@ -20,6 +20,11 @@ apiClient.interceptors.request.use((config) => {
 });
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (response.status === 204 || response.data === "") {
+      response.data = null;
+    }
+    return response;
+  },
   (error) => Promise.reject(error),
 );

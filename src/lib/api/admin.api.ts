@@ -9,7 +9,7 @@ export const adminApi = {
 
   listDoctors: async (params?: { location?: string; specialty?: string }) => {
     const { data } = await apiClient.get("/admin/doctors", { params });
-    return data;
+    return Array.isArray(data) ? data : [];
   },
 
   createDoctor: async (payload: {
@@ -34,7 +34,7 @@ export const adminApi = {
 
   listAdmins: async (): Promise<{ admins: User[]; total: number }> => {
     const { data } = await apiClient.get("/admin/admins");
-    return data;
+    return data ?? { admins: [], total: 0 };
   },
 
   createAdmin: async (payload: {
@@ -67,7 +67,7 @@ export const adminApi = {
 
   listAppointments: async (): Promise<Appointment[]> => {
     const { data } = await apiClient.get("/admin/appointments");
-    return data;
+    return Array.isArray(data) ? data : [];
   },
 
   updateAppointmentStatus: async (id: string, status: "confirmed" | "rejected"): Promise<Appointment> => {
@@ -107,7 +107,7 @@ export const adminApi = {
 
   listUsers: async (params?: { role?: string; location?: string }): Promise<User[]> => {
     const { data } = await apiClient.get("/admin/users", { params });
-    return data;
+    return Array.isArray(data) ? data : [];
   },
 
   toggleUserStatus: async (id: string): Promise<{ success: boolean; isActive: boolean; message: string }> => {

@@ -4,12 +4,12 @@ import type { Partner } from "@/types";
 export const partnersApi = {
   list: async (): Promise<Partner[]> => {
     const { data } = await apiClient.get("/partners");
-    return data;
+    return Array.isArray(data) ? data : [];
   },
 
   listAll: async (): Promise<Partner[]> => {
     const { data } = await apiClient.get("/admin/partners");
-    return data;
+    return Array.isArray(data) ? data : [];
   },
 
   create: async (payload: Omit<Partner, "id" | "createdAt" | "updatedAt">): Promise<Partner> => {

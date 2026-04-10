@@ -4,7 +4,7 @@ import type { Service } from "@/types";
 export const servicesApi = {
   list: async (): Promise<Service[]> => {
     const { data } = await apiClient.get("/admin/services");
-    return data;
+    return Array.isArray(data) ? data : [];
   },
 
   create: async (payload: Omit<Service, "id" | "createdAt" | "updatedAt">): Promise<Service> => {
