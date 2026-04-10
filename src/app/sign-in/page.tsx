@@ -18,17 +18,12 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-const mockAccounts = {
-  admin: { email: "admin@nmsl.app", password: "password123" },
-  appointment_officer: { email: "appointments@nmsl.app", password: "password123" },
-};
-
 export default function SignInPage() {
   const router = useRouter();
   const setSession = useAuthStore((state) => state.setSession);
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: mockAccounts.admin,
+    defaultValues: { email: "", password: "" },
   });
 
   const onSubmit = async (values: FormValues) => {
@@ -36,12 +31,6 @@ export default function SignInPage() {
     localStorage.setItem("nmsl-token", response.token);
     setSession(response);
     router.push("/app/admin");
-  };
-
-  const handleAccountSelect = (value: string) => {
-    const account = mockAccounts[value as keyof typeof mockAccounts];
-    form.setValue("email", account.email);
-    form.setValue("password", account.password);
   };
 
   return (
@@ -61,28 +50,6 @@ export default function SignInPage() {
         </div>
         
         <Button className="w-full h-9 sm:h-10" type="submit">Sign in</Button>
-        
-        <div className="space-y-1.5 pt-2">
-          <label className="text-xs text-green-700 font-medium">Quick Login (Dev)</label>
-          <div className="grid grid-cols-2 gap-2">
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="h-9 text-xs" 
-              onClick={() => handleAccountSelect("admin")}
-            >
-              Admin
-            </Button>
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="h-9 text-xs" 
-              onClick={() => handleAccountSelect("appointment_officer")}
-            >
-              Appointment Officer
-            </Button>
-          </div>
-        </div>
       </form>
     </AuthShell>
   );

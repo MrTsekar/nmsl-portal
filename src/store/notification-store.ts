@@ -2,7 +2,6 @@
 
 import { create } from "zustand";
 import type { AppNotification } from "@/types";
-import { mockNotifications } from "@/lib/mocks/data";
 
 type NotificationState = {
   notifications: AppNotification[];
@@ -11,7 +10,7 @@ type NotificationState = {
 };
 
 export const useNotificationStore = create<NotificationState>((set) => ({
-  notifications: [...mockNotifications],
+  notifications: [],
   addNotification: (notification) =>
     set((state) => ({ notifications: [notification, ...state.notifications] })),
   markAllRead: () =>
@@ -19,3 +18,4 @@ export const useNotificationStore = create<NotificationState>((set) => ({
       notifications: state.notifications.map((n) => ({ ...n, read: true })),
     })),
 }));
+

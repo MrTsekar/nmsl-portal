@@ -10,7 +10,7 @@ export function AppBreadcrumbs() {
 
   return (
     <nav className="flex items-center gap-1 text-xs text-muted-foreground">
-      <Link href="/app/overview" className="hover:text-foreground">Home</Link>
+      <Link href="/app/admin" className="hover:text-foreground">Home</Link>
       {parts.slice(1).map((part, index) => {
         const href = `/${parts.slice(0, index + 2).join("/")}`;
         const isLast = index === parts.slice(1).length - 1;

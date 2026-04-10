@@ -1,14 +1,6 @@
-import axios from "axios";
+﻿import axios from "axios";
 
-// Force live API for testing
-const baseURL = "https://nmsl-api.onrender.com/api/v1";
-export const useMocks = false;
-
-// Debug logging
-console.log("[API CLIENT CONFIG - FORCED]", {
-  baseURL,
-  useMocks,
-});
+const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://nmsl-api.onrender.com/api/v1";
 
 export const apiClient = axios.create({
   baseURL,
