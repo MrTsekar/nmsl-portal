@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { DataTable } from "@/components/shared/data-table";
 import { PageHeader } from "@/components/shared/page-header";
@@ -20,12 +20,14 @@ import type { Testimonial } from "@/types";
 export default function AdminTestimonialsPage() {
   const queryClient = useQueryClient();
   const testimonialsQuery = useTestimonials();
+  const listRef = useRef<HTMLDivElement>(null);
 
   const [patientName, setPatientName] = useState("");
   const [patientCategory, setPatientCategory] = useState<Testimonial["patientCategory"]>("Staff");
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [serviceType, setServiceType] = useState<Testimonial["serviceType"]>("Physical Appointment");
+  const [savedSuccess, setSavedSuccess] = useState(false);
 
   const createMutation = useMutation({
     mutationFn: testimonialsApi.create,
@@ -36,6 +38,9 @@ export default function AdminTestimonialsPage() {
       setTitle("");
       setMessage("");
       setServiceType("Physical Appointment");
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 4000);
+      setTimeout(() => listRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 300);
     },
   });
 
@@ -94,14 +99,18 @@ export default function AdminTestimonialsPage() {
             </Button>
           </div>
         </div>
-        {createMutation.isError && (
-          <p className="mt-2 text-sm text-red-600">Failed to save testimonial. Please try again.</p>
-        )}
+          {savedSuccess && (
+            <p className="mt-2 text-sm text-green-600 font-medium">✓ Testimonial saved successfully!</p>
+          )}
+          {createMutation.isError && (
+            <p className="mt-2 text-sm text-red-600">Failed to save testimonial. Please try again.</p>
+          )}
       </SectionCard>
 
       {testimonialsQuery.isLoading && <LoadState />}
       {testimonialsQuery.isError && <ErrorState message="Could not load testimonials." />}
 
+      <div ref={listRef}>
       {!testimonialsQuery.isLoading && !testimonialsQuery.isError && (
         <>
           <div className="space-y-3 md:hidden">
@@ -171,6 +180,7 @@ export default function AdminTestimonialsPage() {
           </div>
         </>
       )}
+      </div>
     </div>
   );
 }
