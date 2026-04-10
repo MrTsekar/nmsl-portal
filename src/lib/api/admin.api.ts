@@ -35,6 +35,11 @@ export const adminApi = {
     return data;
   },
 
+  toggleDoctorStatus: async (id: string): Promise<{ success: boolean; isActive: boolean; message: string }> => {
+    const { data } = await apiClient.patch(`/admin/doctors/${id}/toggle-status`);
+    return data;
+  },
+
   listAdmins: async (): Promise<{ admins: User[]; total: number }> => {
     const { data } = await apiClient.get("/admin/admins");
     return data ?? { admins: [], total: 0 };

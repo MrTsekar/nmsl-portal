@@ -22,13 +22,28 @@ export default function AdminDoctorsPage() {
   const queryClient = useQueryClient();
   const doctors = useDoctors();
 
-  const [deactivatedIds, setDeactivatedIds] = useState<string[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAvailabilityDialogOpen, setIsAvailabilityDialogOpen] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState<{ id: string; name: string; availabilitySchedule?: any } | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [availabilityError, setAvailabilityError] = useState<string | null>(null);
+
+  const toggleMutation = useMutation({
+    mutationFn: (id: string) => adminApi.toggleDoctorStatus(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["doctors"] });
+    },
+    onError: (err: unknown) => {
+      const axiosErr = err as { response?: { status?: number; data?: { message?: string } } };
+      if (axiosErr.response?.status === 404) {
+        setAvailabilityError("Status toggle is not yet supported by the server.");
+      } else {
+        setAvailabilityError(axiosErr.response?.data?.message ?? "Failed to update doctor status.");
+      }
+      setTimeout(() => setAvailabilityError(null), 5000);
+    },
+  });
 
   const availabilityMutation = useMutation({
     mutationFn: ({ doctorId, schedule }: { doctorId: string; schedule: DoctorAvailability }) =>
@@ -192,11 +207,8 @@ export default function AdminDoctorsPage() {
                     variant="outline"
                     size="sm"
                     className="w-full"
-                    onClick={() =>
-                      setDeactivatedIds((prev) =>
-                        prev.includes(doctor.id) ? prev.filter((id) => id !== doctor.id) : [...prev, doctor.id]
-                      )
-                    }
+                    onClick={() => toggleMutation.mutate(doctor.id)}
+                    disabled={toggleMutation.isPending}
                   >
                     {doctor.active ? "Deactivate" : "Reactivate"}
                   </Button>
@@ -242,11 +254,8 @@ export default function AdminDoctorsPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() =>
-                    setDeactivatedIds((prev) =>
-                      prev.includes(row.id) ? prev.filter((id) => id !== row.id) : [...prev, row.id]
-                    )
-                  }
+                  onClick={() => toggleMutation.mutate(row.id)}
+                  disabled={toggleMutation.isPending}
                 >
                   {row.active ? "Deactivate" : "Reactivate"}
                 </Button>
