@@ -1,0 +1,51 @@
+#!/bin/sh
+# ============================================================
+# pre-push hook — NMSL Portal
+# Runs automatically before every `git push`.
+# Pulls latest master and builds the project.
+# Push is BLOCKED if either step fails.
+# ============================================================
+
+echo ""
+echo "================================================"
+echo "  PRE-PUSH CHECKS"
+echo "================================================"
+
+# ── Step 1: Pull latest from origin/master ──────────────────
+echo ""
+echo "[1/2] Pulling latest from origin/master..."
+git pull origin master --rebase
+
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "================================================"
+  echo "  PUSH BLOCKED: Failed to pull from master."
+  echo "  Resolve merge conflicts first, then push again."
+  echo "================================================"
+  echo ""
+  exit 1
+fi
+
+echo "  ✓ Up to date with master."
+
+# ── Step 2: Build ────────────────────────────────────────────
+echo ""
+echo "[2/2] Running build..."
+npm run build
+
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "================================================"
+  echo "  PUSH BLOCKED: Build failed."
+  echo "  Fix all errors above, then push again."
+  echo "================================================"
+  echo ""
+  exit 1
+fi
+
+echo ""
+echo "================================================"
+echo "  ✓ All checks passed. Pushing..."
+echo "================================================"
+echo ""
+exit 0
