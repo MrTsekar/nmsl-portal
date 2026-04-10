@@ -1,4 +1,5 @@
 ﻿import axios from "axios";
+import { useAuthStore } from "@/store/auth-store";
 
 const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://nmsl-api.onrender.com/api/v1";
 
@@ -12,9 +13,12 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use((config) => {
   const isAuthRoute = config.url?.startsWith("/auth/");
   if (!isAuthRoute && typeof window !== "undefined") {
-    const token = window.localStorage.getItem("nmsl-token");
+    const token = useAuthStore.getState().token;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log("✅ Added auth header to request:", config.url);
+    } else {
+      console.warn("⚠️ No token available for request:", config.url);
     }
   }
   return config;

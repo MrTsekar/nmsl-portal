@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
 import type { Role, User } from "@/types";
 
 type AuthState = {
@@ -35,7 +35,6 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       setSession: ({ token, user }) => {
         console.log("🔐 Setting session:", { token: token?.substring(0, 20) + "...", user: user.email });
-        localStorage.setItem("nmsl-token", token);
         set({ token, user, isAuthenticated: true });
         console.log("✅ Session set, isAuthenticated:", true);
       },
@@ -51,12 +50,12 @@ export const useAuthStore = create<AuthState>()(
         }),
       signOut: () => {
         console.log("🚪 Signing out...");
-        localStorage.removeItem("nmsl-token");
         set({ token: null, user: null, isAuthenticated: false });
       },
     }),
     {
       name: "nmsl-auth-storage",
+      storage: createJSONStorage(() => localStorage),
       onRehydrateStorage: () => {
         console.log("💧 Auth store rehydration started");
         return (state, error) => {
