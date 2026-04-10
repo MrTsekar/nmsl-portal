@@ -77,19 +77,47 @@ npm install
 ```
 
 ### 2. Environment Configuration
-Create a `.env.local` file:
 
+**Quick Setup:**
+```bash
+# Copy the example file
+cp .env.example .env.local
+
+# Edit .env.local with your settings
+```
+
+**Environment Variables:**
+
+See [`.env.example`](.env.example) for all available variables.
+
+**Required Variables:**
 ```env
 # API Configuration
-NEXT_PUBLIC_API_BASE_URL=http://localhost:4000/api
+NEXT_PUBLIC_API_BASE_URL=http://localhost:4000
 
 # Mock Mode (set to "false" to use live backend)
 NEXT_PUBLIC_USE_MOCKS=true
 
-# Feature Flags (optional)
+# Platform identifier
+NEXT_PUBLIC_PLATFORM=local
+```
+
+**Optional Variables:**
+```env
+# Feature Flags
 NEXT_PUBLIC_ENABLE_PREMIUM_THEME_TOGGLE=false
 NEXT_PUBLIC_ENABLE_ROLE_SWITCHER=false
+
+# App Settings
+NEXT_PUBLIC_APP_NAME=NMSL Portal
+NEXT_PUBLIC_DEFAULT_LOCATION=Abuja
 ```
+
+**Important:**
+- Variables starting with `NEXT_PUBLIC_` are exposed to the browser
+- Never put secrets in `NEXT_PUBLIC_` variables
+- Use `.env.local` for local development (gitignored)
+- For production, set these in your hosting platform's UI
 
 ### 3. Start Development Server
 ```bash
@@ -420,16 +448,87 @@ interface OfficerStatistics {
 
 ## 🚀 Deployment
 
-### Vercel (Recommended)
-```bash
-# Install Vercel CLI
-npm i -g vercel
+### Quick Deployment (No Code Changes Needed!)
 
-# Deploy
+This app is designed to be deployed **anywhere** without code changes. Just update environment variables!
+
+**Comprehensive Deployment Guide:** See [`DEPLOYMENT.md`](DEPLOYMENT.md) for detailed instructions on deploying to:
+- 📦 **Render** (easy start, $0-7/month)
+- ☁️ **Azure** (enterprise grade)
+- 🔄 **Migrating from Render → Azure** (zero downtime)
+
+### Quick Start: Render Deployment
+
+**1. Prerequisites:**
+- GitHub repository with your code
+- Render account (free tier available)
+- Backend API deployed and URL ready
+
+**2. Deploy:**
+```bash
+# 1. Push code to GitHub
+git push origin main
+
+# 2. Go to render.com → New Web Service
+# 3. Connect your GitHub repo
+# 4. Use these build settings:
+Build Command: npm install && npm run build
+Start Command: npm start
+```
+
+**3. Set Environment Variables in Render Dashboard:**
+```env
+NEXT_PUBLIC_API_BASE_URL=https://your-backend.onrender.com
+NEXT_PUBLIC_USE_MOCKS=false
+NEXT_PUBLIC_PLATFORM=render
+```
+
+**4. Deploy!** ✅  
+Your app will be live at: `https://nmsl-portal.onrender.com`
+
+### Quick Start: Azure Deployment
+
+**1. Azure Static Web Apps (Recommended):**
+```bash
+# Create via Azure Portal or CLI:
+az staticwebapp create \
+  --name nmsl-portal \
+  --resource-group nmsl-rg \
+  --source https://github.com/youruser/nmslportal \
+  --branch main \
+  --app-location "/" \
+  --output-location ".next"
+```
+
+**2. Set Environment Variables in Azure Portal:**
+```env
+NEXT_PUBLIC_API_BASE_URL=https://nmsl-api.azurewebsites.net
+NEXT_PUBLIC_USE_MOCKS=false
+NEXT_PUBLIC_PLATFORM=azure
+```
+
+**3. Access:** `https://nmsl-portal.azurestaticapps.net`
+
+### Migration: Render → Azure (Zero Downtime)
+
+The beauty of using environment variables:
+
+1. ✅ Deploy to Azure (keep Render running)
+2. ✅ Update DNS to point to Azure
+3. ✅ Monitor for 24-48 hours
+4. ✅ Delete Render service
+
+**No code changes required!** Just update `NEXT_PUBLIC_API_BASE_URL` in each platform.
+
+### Other Platforms
+
+**Vercel:**
+```bash
+npm i -g vercel
 vercel
 ```
 
-### Docker
+**Docker:**
 ```dockerfile
 FROM node:20-alpine
 WORKDIR /app
@@ -440,6 +539,20 @@ RUN npm run build
 EXPOSE 3000
 CMD ["npm", "start"]
 ```
+
+`docker build -t nmsl-portal . && docker run -p 3000:3000 nmsl-portal`
+
+### Environment Variable Setup
+
+All platforms use the same environment variables. Set these in your platform's UI:
+
+| Variable | Local | Render | Azure |
+|----------|-------|--------|-------|
+| `NEXT_PUBLIC_API_BASE_URL` | `http://localhost:4000` | `https://api.onrender.com` | `https://api.azure.net` |
+| `NEXT_PUBLIC_USE_MOCKS` | `true` | `false` | `false` |
+| `NEXT_PUBLIC_PLATFORM` | `local` | `render` | `azure` |
+
+**👉 See [`DEPLOYMENT.md`](DEPLOYMENT.md) for complete step-by-step guides!**
 
 ---
 
