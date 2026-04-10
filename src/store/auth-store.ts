@@ -34,8 +34,10 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isAuthenticated: false,
       setSession: ({ token, user }) => {
+        console.log("🔐 Setting session:", { token: token?.substring(0, 20) + "...", user: user.email });
         localStorage.setItem("nmsl-token", token);
         set({ token, user, isAuthenticated: true });
+        console.log("✅ Session set, isAuthenticated:", true);
       },
       updateUser: (patch) =>
         set((state) => ({
@@ -48,12 +50,27 @@ export const useAuthStore = create<AuthState>()(
             : { user: { ...defaultAdminUser, role }, token: "mock-token", isAuthenticated: true };
         }),
       signOut: () => {
+        console.log("🚪 Signing out...");
         localStorage.removeItem("nmsl-token");
         set({ token: null, user: null, isAuthenticated: false });
       },
     }),
     {
       name: "nmsl-auth-storage",
+      onRehydrateStorage: () => {
+        console.log("💧 Auth store rehydration started");
+        return (state, error) => {
+          if (error) {
+            console.error("❌ Rehydration failed:", error);
+          } else {
+            console.log("✅ Auth store rehydrated:", {
+              hasToken: !!state?.token,
+              hasUser: !!state?.user,
+              isAuthenticated: state?.isAuthenticated,
+            });
+          }
+        };
+      },
     }
   )
 );
