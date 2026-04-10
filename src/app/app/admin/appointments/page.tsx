@@ -304,7 +304,7 @@ export default function AdminAppointmentsPage() {
   }, [appointments.dataUpdatedAt, appointments.data, user?.email]);
 
   const isAppointmentLocked = (appointment: Appointment) => {
-    return appointment.lockedBy && appointment.lockedBy !== user?.email;
+    return Boolean(appointment.lockedBy && appointment.lockedBy !== user?.email);
   };
 
   const canInteract = (appointment: Appointment) => {
