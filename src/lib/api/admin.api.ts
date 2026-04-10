@@ -45,6 +45,7 @@ export const adminApi = {
     location: string;
     state: string;
     address?: string;
+    role?: "admin" | "appointment_officer";
   }): Promise<User> => {
     const { data } = await apiClient.post("/admin/admins", payload);
     return data;

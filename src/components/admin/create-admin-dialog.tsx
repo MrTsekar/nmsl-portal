@@ -20,6 +20,7 @@ const schema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   phone: z.string().min(10, "Phone number must be at least 10 digits"),
+  role: z.enum(["admin", "appointment_officer"]),
   location: z.enum(LOCATION_OPTIONS),
   state: z.string().min(2, "State is required"),
   address: z.string().optional(),
@@ -44,6 +45,7 @@ export function CreateAdminDialog({ open, onOpenChange, onSuccess }: CreateAdmin
       email: "",
       password: "",
       phone: "",
+      role: "admin" as const,
       location: "Abuja",
       state: "FCT",
       address: "",
@@ -101,6 +103,24 @@ export function CreateAdminDialog({ open, onOpenChange, onSuccess }: CreateAdmin
               <Label htmlFor="password">Password *</Label>
               <Input id="password" type="password" placeholder="Min. 8 characters" {...form.register("password")} disabled={isSubmitting} />
               {form.formState.errors.password && <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>}
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="role">Role *</Label>
+              <Select
+                defaultValue="admin"
+                onValueChange={(v) => form.setValue("role", v as FormValues["role"])}
+                disabled={isSubmitting}
+              >
+                <SelectTrigger id="role">
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="appointment_officer">Appointment Officer</SelectItem>
+                </SelectContent>
+              </Select>
+              {form.formState.errors.role && <p className="text-sm text-destructive">{form.formState.errors.role.message}</p>}
             </div>
 
             <div className="space-y-2">
