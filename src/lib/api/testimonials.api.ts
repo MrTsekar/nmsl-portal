@@ -3,8 +3,12 @@ import type { Testimonial } from "@/types";
 
 export const testimonialsApi = {
   list: async (): Promise<Testimonial[]> => {
-    const { data } = await apiClient.get("/admin/testimonials");
-    return Array.isArray(data) ? data : [];
+    try {
+      const { data } = await apiClient.get("/admin/testimonials");
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
   },
 
   create: async (payload: Omit<Testimonial, "id" | "createdAt" | "updatedAt">): Promise<Testimonial> => {
