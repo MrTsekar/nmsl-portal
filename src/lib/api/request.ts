@@ -9,9 +9,5 @@ export async function withMockFallback<T>({
 }) {
   if (useMocks) return mock();
 
-  try {
-    return await live();
-  } catch {
-    return mock();
-  }
+  return await live();
 }
