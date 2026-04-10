@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Clock, Calendar } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Clock, Calendar, Power } from "lucide-react";
+import type { DoctorAvailabilitySchedule } from "@/types";
 
 const DAYS_OF_WEEK = [
   { id: "monday", label: "Monday" },
@@ -32,7 +34,9 @@ interface DoctorAvailabilityDialogProps {
   onOpenChange: (open: boolean) => void;
   doctorName: string;
   doctorId: string;
+  initialAvailability?: DoctorAvailabilitySchedule;
   onSave?: (availability: DoctorAvailability) => void;
+  isSaving?: boolean;
 }
 
 export interface DoctorAvailability {
@@ -48,8 +52,11 @@ export function DoctorAvailabilityDialog({
   onOpenChange,
   doctorName,
   doctorId,
+  initialAvailability,
   onSave,
+  isSaving = false,
 }: DoctorAvailabilityDialogProps) {
+  const [isAvailable, setIsAvailable] = useState(true);
   const [selectedDays, setSelectedDays] = useState<DayId[]>([]);
   const [useUniformTime, setUseUniformTime] = useState(true);
   const [uniformStartTime, setUniformStartTime] = useState("09:00");
@@ -64,7 +71,41 @@ export function DoctorAvailabilityDialog({
     sunday: { start: "09:00", end: "17:00" },
   });
 
+  // Initialize state from current availability when dialog opens
+  useEffect(() => {
+    if (open && initialAvailability) {
+      const hasAvailability = initialAvailability.days && initialAvailability.days.length > 0;
+      setIsAvailable(hasAvailability);
+      setSelectedDays(initialAvailability.days || []);
+      setUseUniformTime(initialAvailability.useUniformTime ?? true);
+      
+      if (initialAvailability.uniformTime) {
+        setUniformStartTime(initialAvailability.uniformTime.start);
+        setUniformEndTime(initialAvailability.uniformTime.end);
+      }
+      
+      if (initialAvailability.customTimes) {
+        setCustomTimes(initialAvailability.customTimes);
+      }
+    } else if (open && !initialAvailability) {
+      // Reset to defaults if no initial availability
+      setIsAvailable(false);
+      setSelectedDays([]);
+      setUseUniformTime(true);
+      setUniformStartTime("09:00");
+      setUniformEndTime("17:00");
+    }
+  }, [open, initialAvailability]);
+
   const allDaysSelected = selectedDays.length === DAYS_OF_WEEK.length;
+
+  const handleToggleAvailability = (checked: boolean) => {
+    setIsAvailable(checked);
+    // When turning off availability, clear selected days
+    if (!checked) {
+      setSelectedDays([]);
+    }
+  };
 
   const handleToggleDay = (dayId: DayId) => {
     setSelectedDays((prev) =>
@@ -93,22 +134,18 @@ export function DoctorAvailabilityDialog({
   const handleSave = () => {
     const availability: DoctorAvailability = {
       doctorId,
-      days: selectedDays,
+      days: isAvailable ? selectedDays : [], // Clear days if not available
       useUniformTime,
       uniformTime: useUniformTime ? { start: uniformStartTime, end: uniformEndTime } : undefined,
       customTimes: !useUniformTime ? customTimes : undefined,
     };
 
     onSave?.(availability);
-    onOpenChange(false);
+    // Don't close dialog here - let parent close it on success
   };
 
   const handleCancel = () => {
-    // Reset to defaults
-    setSelectedDays([]);
-    setUseUniformTime(true);
-    setUniformStartTime("09:00");
-    setUniformEndTime("17:00");
+    // Just close the dialog - state will reset on next open via useEffect
     onOpenChange(false);
   };
 
@@ -123,13 +160,36 @@ export function DoctorAvailabilityDialog({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Day Selection */}
-          <div className="space-y-4">
+          {/* Booking Availability Toggle */}
+          <div className="rounded-lg border-2 border-primary/20 bg-primary/5 p-4">
             <div className="flex items-center justify-between">
-              <Label className="text-base font-semibold flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                Available Days
-              </Label>
+              <div className="space-y-0.5">
+                <Label className="text-base font-semibold flex items-center gap-2">
+                  <Power className="h-5 w-5" />
+                  Booking Availability
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  {isAvailable
+                    ? "Doctor is currently available for bookings"
+                    : "Doctor is currently unavailable for bookings"}
+                </p>
+              </div>
+              <Switch
+                checked={isAvailable}
+                onCheckedChange={handleToggleAvailability}
+                className="data-[state=checked]:bg-green-600"
+              />
+            </div>
+          </div>
+
+          {/* Day Selection */}
+          {isAvailable && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-base font-semibold flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Available Days
+                </Label>
               <Button
                 type="button"
                 variant="outline"
@@ -160,11 +220,10 @@ export function DoctorAvailabilityDialog({
                 </div>
               ))}
             </div>
-          </div>
 
-          {/* Time Selection Mode */}
-          {selectedDays.length > 0 && (
-            <div className="space-y-4">
+            {/* Time Selection Mode */}
+            {selectedDays.length > 0 && (
+              <div className="space-y-4">
               <Label className="text-base font-semibold flex items-center gap-2">
                 <Clock className="h-4 w-4" />
                 Working Hours
@@ -270,18 +329,28 @@ export function DoctorAvailabilityDialog({
               <p className="text-sm">Select at least one day to set working hours</p>
             </div>
           )}
+          </div>
+          )}
+
+          {!isAvailable && (
+            <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
+              <Power className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">Booking availability is currently turned off</p>
+              <p className="text-xs mt-2">Toggle the switch above to enable bookings</p>
+            </div>
+          )}
         </div>
 
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={handleCancel}>
+          <Button type="button" variant="outline" onClick={handleCancel} disabled={isSaving}>
             Cancel
           </Button>
           <Button
             type="button"
             onClick={handleSave}
-            disabled={selectedDays.length === 0}
+            disabled={isSaving}
           >
-            Save Availability
+            {isSaving ? "Saving..." : "Save Availability"}
           </Button>
         </DialogFooter>
       </DialogContent>

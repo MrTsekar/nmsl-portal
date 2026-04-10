@@ -66,6 +66,12 @@ export const mockHandlers = {
         doctors = doctors.filter((d) => d.specialty === params.specialty);
       }
       
+      console.log('[MOCK] Fetching doctors:', doctors.map(d => ({
+        name: d.name,
+        id: d.id,
+        daysCount: d.availabilitySchedule?.days?.length || 0,
+      })));
+      
       return doctors;
     },
     
@@ -93,6 +99,11 @@ export const mockHandlers = {
       const index = mockDoctors.findIndex((d) => d.id === doctorId);
       if (index !== -1) {
         mockDoctors[index].availabilitySchedule = schedule;
+        console.log(`[MOCK] Updated availability for doctor ${doctorId}:`, {
+          doctorName: mockDoctors[index].name,
+          days: schedule.days,
+          daysCount: schedule.days?.length || 0,
+        });
       }
       return { success: true, doctor: mockDoctors[index] };
     },

@@ -25,7 +25,7 @@ export default function AdminDoctorsPage() {
   const [deactivatedIds, setDeactivatedIds] = useState<string[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAvailabilityDialogOpen, setIsAvailabilityDialogOpen] = useState(false);
-  const [selectedDoctor, setSelectedDoctor] = useState<{ id: string; name: string } | null>(null);
+  const [selectedDoctor, setSelectedDoctor] = useState<{ id: string; name: string; availabilitySchedule?: any } | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -34,15 +34,27 @@ export default function AdminDoctorsPage() {
       adminApi.updateDoctorAvailability(doctorId, schedule),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["doctors"] });
+      setIsAvailabilityDialogOpen(false);
+      setSuccessMessage(`Availability updated for ${selectedDoctor?.name}`);
+      setTimeout(() => setSuccessMessage(null), 5000);
     },
   });
 
   const rows = useMemo(() => {
-    const allDoctors = (doctors.data ?? []).map((doctor) => ({
-      ...doctor,
-      available: doctor.availabilitySchedule ? doctor.availabilitySchedule.days.length > 0 : false,
-      active: doctor.isActive ?? true,
-    }));
+    const allDoctors = (doctors.data ?? []).map((doctor) => {
+      const hasSchedule = doctor.availabilitySchedule ? doctor.availabilitySchedule.days.length > 0 : false;
+      console.log(`[AVAILABILITY] ${doctor.name}:`, {
+        hasSchedule: !!doctor.availabilitySchedule,
+        days: doctor.availabilitySchedule?.days,
+        daysCount: doctor.availabilitySchedule?.days?.length,
+        available: hasSchedule,
+      });
+      return {
+        ...doctor,
+        available: hasSchedule,
+        active: doctor.isActive ?? true,
+      };
+    });
 
     if (!searchQuery.trim()) return allDoctors;
 
@@ -62,7 +74,12 @@ export default function AdminDoctorsPage() {
   };
 
   const handleOpenAvailabilityDialog = (doctorId: string, doctorName: string) => {
-    setSelectedDoctor({ id: doctorId, name: doctorName });
+    const doctor = doctors.data?.find(d => d.id === doctorId);
+    setSelectedDoctor({ 
+      id: doctorId, 
+      name: doctorName,
+      availabilitySchedule: doctor?.availabilitySchedule 
+    });
     setIsAvailabilityDialogOpen(true);
   };
 
@@ -71,9 +88,6 @@ export default function AdminDoctorsPage() {
       doctorId: availabilityData.doctorId,
       schedule: availabilityData,
     });
-
-    setSuccessMessage(`Availability updated for ${selectedDoctor?.name}`);
-    setTimeout(() => setSuccessMessage(null), 5000);
   };
 
   if (doctors.isLoading) return <LoadState />;
@@ -235,7 +249,9 @@ export default function AdminDoctorsPage() {
           onOpenChange={setIsAvailabilityDialogOpen}
           doctorId={selectedDoctor.id}
           doctorName={selectedDoctor.name}
+          initialAvailability={selectedDoctor.availabilitySchedule}
           onSave={handleSaveAvailability}
+          isSaving={availabilityMutation.isPending}
         />
       )}
     </div>
