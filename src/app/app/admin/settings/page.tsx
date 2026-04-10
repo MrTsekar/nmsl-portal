@@ -53,6 +53,8 @@ export default function AdminSettingsPage() {
   
   const [saving, setSaving] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
+  const [profileStatus, setProfileStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [passwordStatus, setPasswordStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -98,74 +100,38 @@ export default function AdminSettingsPage() {
 
   const handleSaveProfile = async () => {
     setSaving(true);
+    setProfileStatus(null);
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
     updateUser({
       ...formData,
       gender: formData.gender || undefined,
     });
-    addNotification({
-      id: Date.now().toString(),
-      title: "Success",
-      message: "Profile updated successfully",
-      createdAt: new Date().toISOString(),
-      read: false,
-      category: "system",
-      roles: ["admin", "appointment_officer"],
-    });
+    setProfileStatus({ type: "success", message: "Profile updated successfully" });
+    setTimeout(() => setProfileStatus(null), 4000);
     setSaving(false);
   };
 
   const handleChangePassword = async () => {
     if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
-      addNotification({
-        id: Date.now().toString(),
-        title: "Error",
-        message: "Please fill in all password fields",
-        createdAt: new Date().toISOString(),
-        read: false,
-        category: "system",
-        roles: ["admin", "appointment_officer"],
-      });
+      setPasswordStatus({ type: "error", message: "Please fill in all password fields" });
       return;
     }
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      addNotification({
-        id: Date.now().toString(),
-        title: "Error",
-        message: "New passwords do not match",
-        createdAt: new Date().toISOString(),
-        read: false,
-        category: "system",
-        roles: ["admin", "appointment_officer"],
-      });
+      setPasswordStatus({ type: "error", message: "New passwords do not match" });
       return;
     }
     if (passwordData.newPassword.length < 6) {
-      addNotification({
-        id: Date.now().toString(),
-        title: "Error",
-        message: "Password must be at least 6 characters",
-        createdAt: new Date().toISOString(),
-        read: false,
-        category: "system",
-        roles: ["admin", "appointment_officer"],
-      });
+      setPasswordStatus({ type: "error", message: "Password must be at least 6 characters" });
       return;
     }
     
     setChangingPassword(true);
+    setPasswordStatus(null);
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    addNotification({
-      id: Date.now().toString(),
-      title: "Success",
-      message: "Password changed successfully",
-      createdAt: new Date().toISOString(),
-      read: false,
-      category: "system",
-      roles: ["admin", "appointment_officer"],
-    });
+    setPasswordStatus({ type: "success", message: "Password changed successfully" });
+    setTimeout(() => setPasswordStatus(null), 4000);
     setPasswordData({
       currentPassword: "",
       newPassword: "",
@@ -308,11 +274,18 @@ export default function AdminSettingsPage() {
           </div>
         </div>
 
-        <div className="mt-5 pt-4 border-t">
+        <div className="mt-5 pt-4 border-t space-y-3">
           <Button onClick={handleSaveProfile} disabled={saving} className="min-w-[120px]">
             <Save className="h-4 w-4 mr-2" />
             {saving ? "Saving..." : "Save Changes"}
           </Button>
+          {profileStatus && (
+            <p className={`text-sm font-medium ${
+              profileStatus.type === "success" ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+            }`}>
+              {profileStatus.type === "success" ? "✓ " : "✕ "}{profileStatus.message}
+            </p>
+          )}
         </div>
       </SectionCard>
 
@@ -386,10 +359,17 @@ export default function AdminSettingsPage() {
             </div>
           </div>
 
-          <div className="pt-2">
+          <div className="pt-2 space-y-3">
             <Button onClick={handleChangePassword} disabled={changingPassword} variant="outline" className="min-w-[150px]">
               {changingPassword ? "Changing..." : "Change Password"}
             </Button>
+            {passwordStatus && (
+              <p className={`text-sm font-medium ${
+                passwordStatus.type === "success" ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+              }`}>
+                {passwordStatus.type === "success" ? "✓ " : "✕ "}{passwordStatus.message}
+              </p>
+            )}
           </div>
         </div>
       </SectionCard>
