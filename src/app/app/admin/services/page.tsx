@@ -14,6 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { servicesApi } from "@/lib/api/services.api";
 import { useAuthStore } from "@/store/auth-store";
+import { useNotificationStore } from "@/store/notification-store";
 import type { KeyService, Service, ServiceCategory } from "@/types";
 
 const SERVICE_CATEGORIES: ServiceCategory[] = [
@@ -64,6 +65,7 @@ const emptyForm = (): FormState => ({
 
 export default function AdminServicesPage() {
   const { user } = useAuthStore();
+  const addNotification = useNotificationStore((state) => state.addNotification);
   const adminLocation = user?.location ?? "";
 
   const [services, setServices] = useState<Service[]>([]);
@@ -164,11 +166,40 @@ export default function AdminServicesPage() {
       if (editingId) {
         const updated = await servicesApi.update(editingId, { ...form, location: serviceLocation });
         setServices((prev) => prev.map((s) => (s.id === editingId ? updated : s)));
+        addNotification({
+          id: Date.now().toString(),
+          title: "Success",
+          message: "Service updated successfully",
+          createdAt: new Date().toISOString(),
+          read: false,
+          category: "system",
+          roles: ["admin"],
+        });
       } else {
         const created = await servicesApi.create({ ...form, location: serviceLocation });
         setServices((prev) => [created, ...prev]);
+        addNotification({
+          id: Date.now().toString(),
+          title: "Success",
+          message: "Service created successfully",
+          createdAt: new Date().toISOString(),
+          read: false,
+          category: "system",
+          roles: ["admin"],
+        });
       }
       setDialogOpen(false);
+    } catch (error) {
+      addNotification({
+        id: Date.now().toString(),
+        title: "Error",
+        message: `Failed to ${editingId ? "update" : "create"} service. Please try again.`,
+        createdAt: new Date().toISOString(),
+        read: false,
+        category: "system",
+        roles: ["admin"],
+      });
+      console.error("Error saving service:", error);
     } finally {
       setSaving(false);
     }
@@ -343,7 +374,7 @@ export default function AdminServicesPage() {
             <div className="flex justify-end gap-2 pt-2 border-t border-border/50">
               <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={saving}>Cancel</Button>
               <Button onClick={handleSave} disabled={saving || !form.name.trim() || !form.shortDescription.trim()}>
-                {saving ? "Savingâ€¦" : editingId ? "Save changes" : "Create service"}
+                {saving ? "Saving..." : editingId ? "Save changes" : "Create service"}
               </Button>
             </div>
           </div>
