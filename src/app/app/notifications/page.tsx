@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/shared/page-header";
-import { Bell, Mail, KeyRound, FileText, Pill, MessageSquare, PlusCircle, Trash2, UserPlus, UserMinus } from "lucide-react";
+import { Bell, Mail, KeyRound, FileText, Pill, MessageSquare, PlusCircle, Trash2, UserPlus, UserMinus, AlertCircle, RefreshCw, Loader2 } from "lucide-react";
 import type { Notification, NotificationType } from "@/types";
 
 const notificationIcons: Record<NotificationType, React.ReactNode> = {
@@ -27,12 +27,12 @@ const notificationIcons: Record<NotificationType, React.ReactNode> = {
 export default function NotificationsPage() {
   const router = useRouter();
   const [filter, setFilter] = useState<"unread" | "all">("unread");
-  const { apiNotifications, isLoading, error, fetchNotifications, markAsRead, markAllNotificationsAsRead } =
+  const { apiNotifications, isLoading, error, fetchWithRetry, markAsRead, markAllNotificationsAsRead } =
     useNotificationStore();
 
   useEffect(() => {
-    fetchNotifications({ isRead: filter === "all" ? undefined : false });
-  }, [filter, fetchNotifications]);
+    fetchWithRetry({ isRead: filter === "all" ? undefined : false });
+  }, [filter, fetchWithRetry]);
 
   const handleNotificationClick = async (notification: Notification) => {
     if (!notification.isRead) {
@@ -99,30 +99,49 @@ export default function NotificationsPage() {
 
           <TabsContent value={filter} className="mt-0">
             {isLoading ? (
-              <div className="text-center py-12">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                <p className="mt-2 text-sm text-muted-foreground">Loading notifications...</p>
+              <div className="flex flex-col items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="ml-2 text-sm text-muted-foreground mt-2">Loading notifications...</span>
               </div>
             ) : error ? (
-              <div className="text-center py-12 px-4">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/20 mb-4">
-                  <Bell className="h-6 w-6 text-red-600 dark:text-red-400" />
+              <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                <div className="p-4 bg-red-50 dark:bg-red-900/10 rounded-full">
+                  <AlertCircle className="h-12 w-12 text-red-500" />
                 </div>
-                <p className="text-red-600 dark:text-red-400 font-medium">Failed to load notifications</p>
-                <p className="text-sm text-muted-foreground mt-2">The backend returned a 500 error</p>
-                <Button 
-                  variant="outline" 
-                  className="mt-4" 
-                  onClick={() => fetchNotifications({ isRead: filter === "all" ? undefined : false })}
-                >
-                  Try Again
-                </Button>
+
+                <div className="text-center space-y-2">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    Unable to Load Notifications
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 max-w-md">
+                    {error.message}
+                  </p>
+                  {error.code === 500 && (
+                    <p className="text-xs text-gray-500 dark:text-gray-500">
+                      The server is experiencing issues. Our team has been notified.
+                    </p>
+                  )}
+                </div>
+
+                {error.canRetry && (
+                  <Button
+                    onClick={() => fetchWithRetry({ isRead: filter === "all" ? undefined : false })}
+                    variant="outline"
+                    className="mt-4"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Try Again
+                  </Button>
+                )}
               </div>
             ) : apiNotifications.length === 0 ? (
-              <div className="text-center py-12 px-4">
-                <Bell className="h-12 w-12 mx-auto text-muted-foreground/50" />
-                <p className="mt-2 text-muted-foreground">
+              <div className="flex flex-col items-center justify-center py-12 text-center px-4">
+                <Bell className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                <p className="text-muted-foreground">
                   {filter === "unread" ? "No unread notifications" : "No notifications yet"}
+                </p>
+                <p className="text-sm text-muted-foreground/70 mt-1">
+                  You'll be notified about important updates here
                 </p>
               </div>
             ) : (

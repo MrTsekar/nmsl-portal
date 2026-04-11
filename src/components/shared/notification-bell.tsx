@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell } from "lucide-react";
+import { Bell, RefreshCw } from "lucide-react";
 import { useNotificationStore } from "@/store/notification-store";
 import { useEffect, useState } from "react";
 import {
@@ -11,37 +11,40 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import type { Notification } from "@/types";
 
 export function NotificationBell() {
   const router = useRouter();
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
-  const { apiNotifications, unreadCount, error, fetchNotifications, markAsRead, markAllNotificationsAsRead } =
+  const { apiNotifications, unreadCount, error, fetchWithRetry, markAsRead, markAllNotificationsAsRead } =
     useNotificationStore();
+
+  const isOnNotificationsPage = pathname === "/app/notifications";
 
   // Fetch notifications on mount
   useEffect(() => {
-    fetchNotifications({ isRead: false });
-  }, [fetchNotifications]);
+    fetchWithRetry({ isRead: false });
+  }, [fetchWithRetry]);
 
   // Fetch when dropdown opens
   useEffect(() => {
     if (isOpen) {
-      fetchNotifications({ isRead: false });
+      fetchWithRetry({ isRead: false });
     }
-  }, [isOpen, fetchNotifications]);
+  }, [isOpen, fetchWithRetry]);
 
-  // Auto-refresh every 30 seconds
+  // Auto-refresh every 30 seconds (only if no error)
   useEffect(() => {
     const interval = setInterval(() => {
-      if (!isOpen) {
-        fetchNotifications({ isRead: false });
+      if (!isOpen && !error) {
+        fetchWithRetry({ isRead: false });
       }
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [isOpen, fetchNotifications]);
+  }, [isOpen, error, fetchWithRetry]);
 
   const handleNotificationClick = async (notification: Notification) => {
     // Mark as read
@@ -86,13 +89,21 @@ export function NotificationBell() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
           <Bell className="h-4 w-4" />
-          {unreadCount > 0 && (
+          {/* Show badge if no error */}
+          {!error && unreadCount > 0 && (
             <Badge
               variant="danger"
               className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
             >
               {unreadCount > 9 ? "9+" : unreadCount}
             </Badge>
+          )}
+          {/* Show error indicator */}
+          {error && (
+            <span
+              className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-yellow-500"
+              title="Notifications unavailable"
+            />
           )}
         </Button>
       </DropdownMenuTrigger>
@@ -114,17 +125,32 @@ export function NotificationBell() {
 
         <div className="overflow-y-auto flex-1 max-h-[400px]">
           {error ? (
-            <div className="p-6 text-center">
-              <p className="text-sm text-red-600 dark:text-red-400">Failed to load notifications</p>
-              <p className="text-xs text-muted-foreground mt-1">Backend API error</p>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="mt-3" 
-                onClick={() => fetchNotifications({ isRead: false })}
-              >
-                Retry
-              </Button>
+            <div className="p-6 text-center space-y-3">
+              <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/20">
+                <Bell className="h-5 w-5 text-red-600 dark:text-red-400" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-red-600 dark:text-red-400">
+                  Unable to Load
+                </p>
+                <p className="text-xs text-muted-foreground">{error.message}</p>
+                {error.code === 500 && (
+                  <p className="text-xs text-muted-foreground/70">
+                    Server issue. Team has been notified.
+                  </p>
+                )}
+              </div>
+              {error.canRetry && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8"
+                  onClick={() => fetchWithRetry({ isRead: false })}
+                >
+                  <RefreshCw className="h-3 w-3 mr-1.5" />
+                  Try Again
+                </Button>
+              )}
             </div>
           ) : apiNotifications.length === 0 ? (
             <div className="p-6 text-center text-sm text-muted-foreground">
