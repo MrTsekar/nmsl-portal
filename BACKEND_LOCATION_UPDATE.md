@@ -1,4 +1,12 @@
-# Backend Update: Services Location Selector
+# Backend Update: Location Selector + Image Upload
+
+## 🚨 QUICK SUMMARY FOR BACKEND
+**Two changes needed:**
+
+1. **Location Selector**: Accept ANY Nigeria location in `POST/PATCH /admin/services` - don't force admin's location
+2. **Image Upload**: Upload base64 images to Azure, return Azure URLs (not base64)
+
+---
 
 ## Change Summary
 Frontend now allows admins to **select any location** when creating/editing services, instead of hardcoding to their admin location.
