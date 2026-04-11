@@ -29,10 +29,27 @@ apiClient.interceptors.request.use((config) => {
 
 apiClient.interceptors.response.use(
   (response) => {
-    if (response.status === 204 || response.data === "") {
+    // Handle 204 No Content - this is a valid success response
+    if (response.status === 204) {
+      response.data = null;
+      return response;
+    }
+    
+    // Handle empty response data
+    if (response.data === "" || response.data === undefined) {
       response.data = null;
     }
+    
     return response;
   },
-  (error) => Promise.reject(error),
+  (error) => {
+    // Don't treat 204 as an error
+    if (error?.response?.status === 204) {
+      return Promise.resolve({
+        ...error.response,
+        data: null,
+      });
+    }
+    return Promise.reject(error);
+  },
 );

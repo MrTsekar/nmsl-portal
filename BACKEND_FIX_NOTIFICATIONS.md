@@ -1,5 +1,31 @@
 # BACKEND FIX REQUIRED: Notifications API Returning 500 Error
 
+---
+
+## 🤖 **PROMPT FOR BACKEND AI**
+
+```
+Fix the GET /api/v1/notifications endpoint that's returning 500 Internal Server Error.
+
+Requirements:
+- Endpoint: GET /notifications with optional query params (page, limit, isRead, type)
+- Requires JWT authentication via Authorization header
+- When user has NO notifications: return 204 No Content (NOT 500 error)
+- When user has notifications: return 200 OK with JSON:
+  {
+    "notifications": [...],
+    "unreadCount": 5,
+    "pagination": { "page": 1, "limit": 20, "total": 5, "pages": 1 }
+  }
+- Extract userId from JWT token, filter notifications by userId
+- Ensure database table exists with proper schema
+- Add error handling and logging
+
+Test: curl -H "Authorization: Bearer <TOKEN>" https://nmsl-api.onrender.com/api/v1/notifications?isRead=false
+```
+
+---
+
 ## Issue Summary
 The GET `/api/v1/notifications` endpoint is returning a **500 Internal Server Error** when called from the frontend.
 
