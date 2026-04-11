@@ -18,7 +18,22 @@ export const notificationsApi = {
     if (params?.type) queryParams.set("type", params.type);
 
     const url = `/notifications${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
-    const { data } = await apiClient.get<NotificationsResponse>(url);
+    const { data, status } = await apiClient.get<NotificationsResponse>(url);
+    
+    // Handle 204 No Content - backend returns this when there are no notifications
+    if (status === 204 || !data) {
+      return {
+        notifications: [],
+        unreadCount: 0,
+        pagination: {
+          page: 1,
+          limit: 20,
+          total: 0,
+          pages: 0,
+        },
+      };
+    }
+    
     return data;
   },
 
