@@ -17,7 +17,7 @@ import type { Notification } from "@/types";
 export function NotificationBell() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const { apiNotifications, unreadCount, fetchNotifications, markAsRead, markAllNotificationsAsRead } =
+  const { apiNotifications, unreadCount, error, fetchNotifications, markAsRead, markAllNotificationsAsRead } =
     useNotificationStore();
 
   // Fetch notifications on mount
@@ -113,7 +113,20 @@ export function NotificationBell() {
         </div>
 
         <div className="overflow-y-auto flex-1 max-h-[400px]">
-          {apiNotifications.length === 0 ? (
+          {error ? (
+            <div className="p-6 text-center">
+              <p className="text-sm text-red-600 dark:text-red-400">Failed to load notifications</p>
+              <p className="text-xs text-muted-foreground mt-1">Backend API error</p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-3" 
+                onClick={() => fetchNotifications({ isRead: false })}
+              >
+                Retry
+              </Button>
+            </div>
+          ) : apiNotifications.length === 0 ? (
             <div className="p-6 text-center text-sm text-muted-foreground">
               No new notifications
             </div>

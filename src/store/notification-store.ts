@@ -49,6 +49,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
         isLoading: false,
       });
     } catch (error) {
+      console.error("❌ Failed to fetch notifications:", error);
       set({
         error: error instanceof Error ? error.message : "Failed to fetch notifications",
         isLoading: false,

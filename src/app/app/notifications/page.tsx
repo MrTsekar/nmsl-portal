@@ -27,7 +27,7 @@ const notificationIcons: Record<NotificationType, React.ReactNode> = {
 export default function NotificationsPage() {
   const router = useRouter();
   const [filter, setFilter] = useState<"unread" | "all">("unread");
-  const { apiNotifications, isLoading, fetchNotifications, markAsRead, markAllNotificationsAsRead } =
+  const { apiNotifications, isLoading, error, fetchNotifications, markAsRead, markAllNotificationsAsRead } =
     useNotificationStore();
 
   useEffect(() => {
@@ -102,6 +102,21 @@ export default function NotificationsPage() {
               <div className="text-center py-12">
                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                 <p className="mt-2 text-sm text-muted-foreground">Loading notifications...</p>
+              </div>
+            ) : error ? (
+              <div className="text-center py-12 px-4">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/20 mb-4">
+                  <Bell className="h-6 w-6 text-red-600 dark:text-red-400" />
+                </div>
+                <p className="text-red-600 dark:text-red-400 font-medium">Failed to load notifications</p>
+                <p className="text-sm text-muted-foreground mt-2">The backend returned a 500 error</p>
+                <Button 
+                  variant="outline" 
+                  className="mt-4" 
+                  onClick={() => fetchNotifications({ isRead: filter === "all" ? undefined : false })}
+                >
+                  Try Again
+                </Button>
               </div>
             ) : apiNotifications.length === 0 ? (
               <div className="text-center py-12 px-4">
