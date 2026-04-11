@@ -31,4 +31,10 @@ export const partnersApi = {
     const { data } = await apiClient.patch(`/admin/partners/${id}/toggle`);
     return data;
   },
+
+  getUploadUrl: async (filename: string, contentType: string) => {
+    return await apiClient.get("/admin/partners/upload-url", {
+      params: { filename, contentType },
+    });
+  },
 };

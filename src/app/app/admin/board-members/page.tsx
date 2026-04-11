@@ -39,6 +39,7 @@ export default function AdminBoardMembersPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm());
 
   useEffect(() => {
@@ -47,6 +48,35 @@ export default function AdminBoardMembersPage() {
       setLoading(false);
     });
   }, []);
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploading(true);
+
+      // Step 1: Get signed upload URL from backend
+      const { data } = await boardMembersApi.getUploadUrl(file.name, file.type);
+
+      // Step 2: Upload directly to Azure
+      await fetch(data.uploadUrl, {
+        method: "PUT",
+        body: file,
+        headers: {
+          "x-ms-blob-type": "BlockBlob",
+          "Content-Type": file.type,
+        },
+      });
+
+      // Step 3: Save final URL to form
+      setForm({ ...form, photoUrl: data.finalUrl });
+    } catch (error) {
+      console.error("Failed to upload photo:", error);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const openCreate = () => {
     setEditingId(null);
@@ -238,16 +268,33 @@ export default function AdminBoardMembersPage() {
             </div>
 
             <div>
-              <Label htmlFor="photoUrl">Photo URL *</Label>
-              <Input
-                id="photoUrl"
-                value={form.photoUrl}
-                onChange={(e) => setForm({ ...form, photoUrl: e.target.value })}
-                placeholder="e.g., /board/member-name.jpg"
-              />
-              <p className="text-xs text-slate-500 mt-1">
-                Upload photo to public/board/ folder first
-              </p>
+              <Label htmlFor="photoUrl">Photo *</Label>
+              <div className="space-y-2">
+                <Input
+                  id="photo-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoUpload}
+                  disabled={uploading}
+                  className="cursor-pointer"
+                />
+                {uploading && (
+                  <p className="text-sm text-blue-600">Uploading photo...</p>
+                )}
+                {form.photoUrl && !uploading && (
+                  <div className="flex items-center gap-2">
+                    <div className="relative w-20 h-20 rounded-lg overflow-hidden border">
+                      <Image
+                        src={form.photoUrl}
+                        alt="Preview"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <p className="text-sm text-green-600">Photo uploaded successfully</p>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div>

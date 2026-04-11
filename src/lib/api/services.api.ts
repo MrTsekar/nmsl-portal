@@ -35,4 +35,10 @@ export const servicesApi = {
     const { data } = await apiClient.delete(`/admin/services/${id}`);
     return data;
   },
+
+  getUploadUrl: async (filename: string, contentType: string, type: 'banner' | 'icon') => {
+    return await apiClient.get("/admin/services/upload-url", {
+      params: { filename, contentType, type },
+    });
+  },
 };

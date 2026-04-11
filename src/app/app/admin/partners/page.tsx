@@ -36,6 +36,7 @@ export default function AdminPartnersPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm());
 
   useEffect(() => {
@@ -106,6 +107,40 @@ export default function AdminPartnersPage() {
       setPartners(updated);
     } catch (error) {
       console.error("Toggle failed:", error);
+    }
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      // Step 1: Get signed upload URL from backend
+      const { data } = await partnersApi.getUploadUrl(file.name, file.type);
+      const { uploadUrl, finalUrl } = data;
+
+      // Step 2: Upload directly to Azure
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'x-ms-blob-type': 'BlockBlob',
+          'Content-Type': file.type,
+        },
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Upload to Azure failed');
+      }
+
+      // Step 3: Set final Azure URL in form
+      setForm({ ...form, logoUrl: finalUrl });
+    } catch (error) {
+      console.error('Image upload failed:', error);
+      alert('Failed to upload image. Please try again.');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -226,16 +261,43 @@ export default function AdminPartnersPage() {
             </div>
 
             <div>
-              <Label htmlFor="logoUrl">Logo URL *</Label>
-              <Input
-                id="logoUrl"
-                value={form.logoUrl}
-                onChange={(e) => setForm({ ...form, logoUrl: e.target.value })}
-                placeholder="e.g., /partners/npa.png"
-              />
-              <p className="text-xs text-slate-500 mt-1">
-                Upload logo to public/partners/ folder first
-              </p>
+              <Label htmlFor="logo">Partner Logo *</Label>
+              <div
+                className="relative border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer"
+                onClick={() => !uploading && document.getElementById("logo-upload")?.click()}
+              >
+                {form.logoUrl ? (
+                  <div className="relative">
+                    <div className="relative h-32 flex items-center justify-center bg-slate-50 dark:bg-slate-800 rounded-lg mb-2">
+                      <Image src={form.logoUrl} alt="Logo preview" width={200} height={128} className="max-h-32 w-auto object-contain" />
+                    </div>
+                    <button
+                      type="button"
+                      className="absolute -top-2 -right-2 rounded-full bg-red-500 p-1.5 text-white hover:bg-red-600"
+                      onClick={(e) => { e.stopPropagation(); setForm({ ...form, logoUrl: "" }); }}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">Click to change logo</p>
+                  </div>
+                ) : (
+                  <>
+                    <ImagePlus className="h-12 w-12 mx-auto text-slate-400 mb-2" />
+                    <p className="text-sm font-medium mb-1">
+                      {uploading ? 'Uploading...' : 'Click to upload partner logo'}
+                    </p>
+                    <p className="text-xs text-slate-500">PNG, JPG, SVG up to 5MB</p>
+                  </>
+                )}
+                <input
+                  id="logo-upload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleLogoUpload}
+                  disabled={uploading}
+                />
+              </div>
             </div>
 
             <div>

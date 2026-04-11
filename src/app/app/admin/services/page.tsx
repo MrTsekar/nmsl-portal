@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { ImagePlus, MapPin, Pencil, Plus, Trash2, X } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { SectionCard } from "@/components/shared/section-card";
@@ -74,25 +74,18 @@ export default function AdminServicesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [uploadingIcon, setUploadingIcon] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm());
   const [editingLocation, setEditingLocation] = useState<string>(adminLocation);
   const [ksTitle, setKsTitle] = useState("");
   const [ksDesc, setKsDesc] = useState("");
-
-  const bannerInputRef = useRef<HTMLInputElement>(null);
-  const iconInputRef = useRef<HTMLInputElement>(null);
-  const bannerObjectUrl = useRef<string | undefined>(undefined);
-  const iconObjectUrl = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     servicesApi.list().then((data) => {
       setServices(data);
       setLoading(false);
     });
-    return () => {
-      if (bannerObjectUrl.current) URL.revokeObjectURL(bannerObjectUrl.current);
-      if (iconObjectUrl.current) URL.revokeObjectURL(iconObjectUrl.current);
-    };
   }, []);
 
   // Admin can view all services across all locations
@@ -124,21 +117,45 @@ export default function AdminServicesPage() {
     setDialogOpen(true);
   };
 
-  const handleImageUpload = (
+  const handleImageUpload = async (
     event: React.ChangeEvent<HTMLInputElement>,
     field: "bannerImageUrl" | "iconImageUrl",
-    objectUrlRef: React.MutableRefObject<string | undefined>,
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
-    // Convert to base64 so the image persists when saved to backend
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = reader.result as string;
-      setForm((prev) => ({ ...prev, [field]: base64 }));
-    };
-    reader.readAsDataURL(file);
+
+    const isBanner = field === "bannerImageUrl";
+    const setUploading = isBanner ? setUploadingBanner : setUploadingIcon;
+    const imageType = isBanner ? 'banner' : 'icon';
+
+    setUploading(true);
+    try {
+      // Step 1: Get signed upload URL from backend
+      const { data } = await servicesApi.getUploadUrl(file.name, file.type, imageType);
+      const { uploadUrl, finalUrl } = data;
+
+      // Step 2: Upload directly to Azure
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'x-ms-blob-type': 'BlockBlob',
+          'Content-Type': file.type,
+        },
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Upload to Azure failed');
+      }
+
+      // Step 3: Set final Azure URL in form
+      setForm((prev) => ({ ...prev, [field]: finalUrl }));
+    } catch (error) {
+      console.error('Image upload failed:', error);
+      alert('Failed to upload image. Please try again.');
+    } finally {
+      setUploading(false);
+    }
     event.target.value = "";
   };
 
@@ -335,7 +352,7 @@ export default function AdminServicesPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Banner Image <span className="text-xs text-muted-foreground">(full-width hero)</span></Label>
-                <div className="relative flex h-32 cursor-pointer items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-border hover:border-primary/50 transition-colors bg-muted/20" onClick={() => bannerInputRef.current?.click()}>
+                <div className="relative flex h-32 cursor-pointer items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-border hover:border-primary/50 transition-colors bg-muted/20" onClick={() => !uploadingBanner && document.getElementById('banner-upload')?.click()}>
                   {form.bannerImageUrl ? (
                     <>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -347,16 +364,16 @@ export default function AdminServicesPage() {
                   ) : (
                     <div className="flex flex-col items-center gap-1 text-muted-foreground">
                       <ImagePlus className="h-6 w-6" />
-                      <span className="text-xs">Click to upload banner</span>
+                      <span className="text-xs">{uploadingBanner ? 'Uploading...' : 'Click to upload banner'}</span>
                     </div>
                   )}
                 </div>
-                <input ref={bannerInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, "bannerImageUrl", bannerObjectUrl)} />
+                <input id="banner-upload" type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, "bannerImageUrl")} disabled={uploadingBanner} />
               </div>
 
               <div className="space-y-2">
                 <Label>Service Icon <span className="text-xs text-muted-foreground">(small badge / thumbnail)</span></Label>
-                <div className="relative flex h-32 cursor-pointer items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-border hover:border-primary/50 transition-colors bg-muted/20" onClick={() => iconInputRef.current?.click()}>
+                <div className="relative flex h-32 cursor-pointer items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-border hover:border-primary/50 transition-colors bg-muted/20" onClick={() => !uploadingIcon && document.getElementById('icon-upload')?.click()}>
                   {form.iconImageUrl ? (
                     <>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -368,11 +385,11 @@ export default function AdminServicesPage() {
                   ) : (
                     <div className="flex flex-col items-center gap-1 text-muted-foreground">
                       <ImagePlus className="h-6 w-6" />
-                      <span className="text-xs">Click to upload icon</span>
+                      <span className="text-xs">{uploadingIcon ? 'Uploading...' : 'Click to upload icon'}</span>
                     </div>
                   )}
                 </div>
-                <input ref={iconInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, "iconImageUrl", iconObjectUrl)} />
+                <input id="icon-upload" type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, "iconImageUrl")} disabled={uploadingIcon} />
               </div>
             </div>
 

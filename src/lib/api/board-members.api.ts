@@ -31,4 +31,10 @@ export const boardMembersApi = {
     const { data } = await apiClient.patch(`/admin/board-members/${id}/toggle`);
     return data;
   },
+
+  getUploadUrl: async (filename: string, contentType: string) => {
+    return await apiClient.get("/admin/board-members/upload-url", {
+      params: { filename, contentType },
+    });
+  },
 };
