@@ -64,8 +64,50 @@ curl -X POST https://nmsl-api.onrender.com/api/v1/admin/services \
 
 **Expected:** Service created with `location: "Port Harcourt"`, not admin's location.
 
+## Image Upload Requirements
+
+### Services Images (`bannerImageUrl`, `iconImageUrl`)
+Frontend currently sends base64 data URLs. Backend should:
+
+1. **Accept base64 data URLs** in create/update requests:
+   ```json
+   {
+     "bannerImageUrl": "data:image/png;base64,iVBORw0KGgoAAAANS...",
+     "iconImageUrl": "data:image/jpeg;base64,/9j/4AAQSkZJRg..."
+   }
+   ```
+
+2. **Upload to Azure Blob Storage**:
+   - Extract image data from base64 string
+   - Determine file type from data URL prefix (`image/png`, `image/jpeg`, etc.)
+   - Upload to Azure Storage container (e.g., `nmsl-services`)
+   - Generate unique filename: `services/{id}/banner.{ext}` or `services/{id}/icon.{ext}`
+
+3. **Return Azure Storage URLs** in response:
+   ```json
+   {
+     "id": "uuid",
+     "bannerImageUrl": "https://nmslstorage.blob.core.windows.net/services/uuid/banner.png",
+     "iconImageUrl": "https://nmslstorage.blob.core.windows.net/services/uuid/icon.jpg",
+     ...
+   }
+   ```
+
+### Board Members Photos (`photoUrl`)
+Same pattern for board member profile photos:
+
+1. Accept base64 data URL in `photoUrl` field
+2. Upload to Azure Storage (`nmsl-board-members` container)
+3. Store as `board-members/{id}/photo.{ext}`
+4. Return Azure Storage URL in response
+
+**Frontend will handle converting uploaded files to base64 before sending.**
+
 ## Success Criteria
 ✅ Services can be created with any of the 6 Nigeria locations  
 ✅ Location field is validated (rejects invalid locations)  
 ✅ GET requests return the correct stored location  
-✅ Location is NOT overridden with admin's facility
+✅ Location is NOT overridden with admin's facility  
+✅ Base64 images are uploaded to Azure Blob Storage  
+✅ Azure Storage URLs are returned and stored in database  
+✅ Images are publicly accessible via Azure CDN URLs
