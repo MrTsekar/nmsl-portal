@@ -1,27 +1,40 @@
-# BACKEND FIX REQUIRED: Notifications API Returning 500 Error
+# BACKEND FIX: Notifications API Returns 500 Error
 
 ---
 
-## 🤖 **PROMPT FOR BACKEND AI**
+## 🤖 **CLAUDE AI PROMPT** (Copy this to backend Claude)
 
 ```
-Fix the GET /api/v1/notifications endpoint that's returning 500 Internal Server Error.
+The GET /notifications endpoint is returning 500 Internal Server Error.
 
-Requirements:
-- Endpoint: GET /notifications with optional query params (page, limit, isRead, type)
-- Requires JWT authentication via Authorization header
-- When user has NO notifications: return 204 No Content (NOT 500 error)
-- When user has notifications: return 200 OK with JSON:
-  {
-    "notifications": [...],
-    "unreadCount": 5,
-    "pagination": { "page": 1, "limit": 20, "total": 5, "pages": 1 }
-  }
-- Extract userId from JWT token, filter notifications by userId
-- Ensure database table exists with proper schema
-- Add error handling and logging
+Current behavior: 500 error
+Expected behavior: 
+  - Return 200 OK with empty array when no notifications exist
+  - Return 200 OK with data when notifications exist
+  - NEVER return 500 for valid authenticated requests
 
-Test: curl -H "Authorization: Bearer <TOKEN>" https://nmsl-api.onrender.com/api/v1/notifications?isRead=false
+Fix required:
+1. Check if notifications table exists in database (create if missing)
+2. Extract userId from JWT token (Authorization header)
+3. Query: SELECT * FROM notifications WHERE userId = ? ORDER BY createdAt DESC
+4. If empty: Return 200 with { "notifications": [], "unreadCount": 0, "pagination": {...} }
+5. If has data: Return 200 with proper structure
+6. Add error handling with logging
+
+Database schema (if table missing):
+CREATE TABLE notifications (
+  id UUID PRIMARY KEY,
+  userId UUID NOT NULL,
+  type VARCHAR(50),
+  title VARCHAR(255),
+  message TEXT,
+  isRead BOOLEAN DEFAULT FALSE,
+  actionUrl VARCHAR(500),
+  metadata JSONB,
+  createdAt TIMESTAMP DEFAULT NOW()
+);
+
+Test: The endpoint should work without throwing 500 errors.
 ```
 
 ---
