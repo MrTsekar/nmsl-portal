@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { servicesApi } from "@/lib/api/services.api";
 import { useAuthStore } from "@/store/auth-store";
 import { useNotificationStore } from "@/store/notification-store";
+import { NIGERIA_LOCATIONS } from "@/lib/constants/locations";
 import type { KeyService, Service, ServiceCategory } from "@/types";
 
 const SERVICE_CATEGORIES: ServiceCategory[] = [
@@ -283,12 +284,24 @@ export default function AdminServicesPage() {
             <DialogTitle>{editingId ? "Edit service" : "Add new service"}</DialogTitle>
           </DialogHeader>
 
-          {/* Location notice in dialog */}
-          <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800/50 dark:bg-blue-900/20 px-3 py-2">
-            <MapPin className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />
-            <span className="text-sm text-blue-800 dark:text-blue-300">
-              Assigned to facility: <strong>{editingLocation || adminLocation}</strong>
-            </span>
+          {/* Location selector in dialog */}
+          <div className="space-y-1">
+            <Label htmlFor="location-select">Location *</Label>
+            <Select value={editingLocation || adminLocation} onValueChange={setEditingLocation}>
+              <SelectTrigger id="location-select">
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <SelectValue placeholder="Select location" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {NIGERIA_LOCATIONS.map((loc) => (
+                  <SelectItem key={loc} value={loc}>
+                    {loc}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-5 pt-1">
