@@ -137,6 +137,45 @@ export interface AppNotification {
   roles: Role[];
 }
 
+// Backend API Notification Types
+export enum NotificationType {
+  PASSWORD_CHANGED = "password_changed",
+  EMAIL_CHANGED = "email_changed",
+  ACCOUNT_SECURITY = "account_security",
+  NEW_PRESCRIPTION = "new_prescription",
+  NEW_RESULT = "new_result",
+  SERVICE_ADDED = "service_added",
+  SERVICE_UPDATED = "service_updated",
+  SERVICE_DELETED = "service_deleted",
+  BOARD_MEMBER_ADDED = "board_member_added",
+  BOARD_MEMBER_REMOVED = "board_member_removed",
+  CONTACT_FORM_SUBMITTED = "contact_form_submitted",
+  NEW_MESSAGE = "new_message",
+}
+
+export interface Notification {
+  id: string;
+  userId: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  isRead: boolean;
+  actionUrl: string | null;
+  metadata: Record<string, any> | null;
+  createdAt: string;
+}
+
+export interface NotificationsResponse {
+  notifications: Notification[];
+  unreadCount: number;
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+
 export interface KeyService {
   id: string;
   title: string;
