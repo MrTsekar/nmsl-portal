@@ -99,6 +99,19 @@ export default function AdminPartnersPage() {
     }
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Convert to base64
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setForm({ ...form, logoUrl: base64String });
+    };
+    reader.readAsDataURL(file);
+  };
+
   const toggleActive = async (partner: Partner) => {
     try {
       await partnersApi.toggleActive(partner.id);

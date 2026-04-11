@@ -17,15 +17,18 @@ location: string;
 ### 2. Image Upload to Azure
 - **Current Issue**: Storing base64 in database (huge!)
 - **New Behavior**: Upload to Azure Blob Storage, return URLs
-- **Affected Fields**: `bannerImageUrl`, `iconImageUrl` (services), `photoUrl` (board members)
+- **Affected Fields**: 
+  - Services: `bannerImageUrl`, `iconImageUrl`
+  - Board Members: `photoUrl`
+  - **Partners: `logoUrl`**
 
 **Flow:**
 ```
 Frontend sends: "data:image/png;base64,iVBORw0KGg..."
 Backend processes:
   1. Extract base64 data
-  2. Upload to Azure Storage (container: nmsl-services or nmsl-board-members)
-  3. Return Azure URL: "https://nmslstorage.blob.core.windows.net/services/{id}/banner.png"
+  2. Upload to Azure Storage (containers: nmsl-services, nmsl-board-members, nmsl-partners)
+  3. Return Azure URL: "https://nmslstorage.blob.core.windows.net/partners/{id}/logo.png"
 ```
 
 **Test:**

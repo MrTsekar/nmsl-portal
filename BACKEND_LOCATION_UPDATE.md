@@ -109,6 +109,14 @@ Same pattern for board member profile photos:
 3. Store as `board-members/{id}/photo.{ext}`
 4. Return Azure Storage URL in response
 
+### Partners Logos (`logoUrl`)
+Same pattern for partner logos:
+
+1. Accept base64 data URL in `logoUrl` field
+2. Upload to Azure Storage (`nmsl-partners` container)
+3. Store as `partners/{id}/logo.{ext}`
+4. Return Azure Storage URL in response
+
 **Frontend will handle converting uploaded files to base64 before sending.**
 
 ## Success Criteria
