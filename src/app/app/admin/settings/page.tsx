@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Camera, Eye, EyeOff, Save } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { SectionCard } from "@/components/shared/section-card";
@@ -13,9 +14,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuthStore } from "@/store/auth-store";
 import { useNotificationStore } from "@/store/notification-store";
 import { NIGERIAN_STATES } from "@/lib/constants/states";
+import { authApi } from "@/lib/api/auth.api";
 
 export default function AdminSettingsPage() {
-  const { user, updateUser } = useAuthStore();
+  const router = useRouter();
+  const { user, updateUser, signOut } = useAuthStore();
   const addNotification = useNotificationStore((state) => state.addNotification);
   
   const [avatarPreview, setAvatarPreview] = useState<string | undefined>(undefined);
@@ -128,16 +131,44 @@ export default function AdminSettingsPage() {
     
     setChangingPassword(true);
     setPasswordStatus(null);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setPasswordStatus({ type: "success", message: "Password changed successfully" });
-    setTimeout(() => setPasswordStatus(null), 4000);
-    setPasswordData({
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    });
-    setChangingPassword(false);
+    
+    try {
+      const result = await authApi.changePassword(passwordData);
+      
+      console.log('✅ Password changed successfully:', result);
+      
+      setPasswordStatus({ type: "success", message: result.message || "Password changed successfully" });
+      
+      // Clear password fields
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+      
+      // If backend requires re-authentication, logout and redirect
+      if (result.requiresReauth) {
+        setTimeout(() => {
+          signOut();
+          addNotification({
+            id: Date.now().toString(),
+            title: "Password Changed",
+            message: "Please sign in with your new password",
+            createdAt: new Date().toISOString(),
+            read: false,
+            category: "system",
+            roles: ["admin", "appointment_officer"],
+          });
+          router.push("/sign-in");
+        }, 2000);
+      }
+    } catch (error: any) {
+      console.error('❌ Password change failed:', error);
+      const errorMessage = error.response?.data?.message || error.message || "Failed to change password";
+      setPasswordStatus({ type: "error", message: Array.isArray(errorMessage) ? errorMessage[0] : errorMessage });
+    } finally {
+      setChangingPassword(false);
+    }
   };
 
   return (
