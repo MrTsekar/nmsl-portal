@@ -11,8 +11,11 @@ export const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
-  const isAuthRoute = config.url?.startsWith("/auth/");
-  if (!isAuthRoute && typeof window !== "undefined") {
+  // Public auth routes that don't need authentication
+  const publicAuthRoutes = ["/auth/sign-in", "/auth/sign-up", "/auth/forgot-password", "/auth/reset-password"];
+  const isPublicAuthRoute = publicAuthRoutes.some(route => config.url?.startsWith(route));
+  
+  if (!isPublicAuthRoute && typeof window !== "undefined") {
     const token = useAuthStore.getState().token;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
