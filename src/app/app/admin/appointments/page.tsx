@@ -417,7 +417,7 @@ export default function AdminAppointmentsPage() {
                           name="appointment-select-mobile"
                           checked={lockedAppointmentId === appointment.id}
                           onChange={() => handleLockToggle(appointment.id)}
-                          disabled={locked}
+                          disabled={locked && lockedAppointmentId !== appointment.id}
                           className="h-4 w-4 cursor-pointer disabled:cursor-not-allowed"
                         />
                       </div>
@@ -531,7 +531,7 @@ export default function AdminAppointmentsPage() {
                             name="appointment-select"
                             checked={lockedAppointmentId === appointment.id}
                             onChange={() => handleLockToggle(appointment.id)}
-                            disabled={locked}
+                            disabled={locked && lockedAppointmentId !== appointment.id}
                             className="h-4 w-4 cursor-pointer disabled:cursor-not-allowed"
                           />
                         </td>
