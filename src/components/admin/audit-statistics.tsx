@@ -12,7 +12,8 @@ import { StatCard } from "@/components/shared/stat-card";
 import { LoadState } from "@/components/shared/load-state";
 import { EmptyState } from "@/components/shared/empty-state";
 import { adminApi } from "@/lib/api/admin.api";
-import type { OfficerStatistics, AuditLog } from "@/types";
+import { useAppointments } from "@/hooks/use-app-data";
+import type { AuditLog } from "@/types";
 
 function formatDateTime(dateString: string) {
   const date = new Date(dateString);
@@ -54,48 +55,42 @@ interface AuditStatisticsProps {
 }
 
 export function AuditStatistics({ className }: AuditStatisticsProps) {
-  const [officerFilter, setOfficerFilter] = useState("all");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  const statisticsQuery = useQuery({
-    queryKey: ["officer-statistics", startDate, endDate],
-    queryFn: () => adminApi.getOfficerStatistics({ startDate, endDate }),
-  });
+  const appointments = useAppointments();
 
   const auditLogsQuery = useQuery({
-    queryKey: ["audit-logs", startDate, endDate, officerFilter],
+    queryKey: ["audit-logs", startDate, endDate],
     queryFn: () => 
       adminApi.getAuditLogs({ 
         startDate, 
-        endDate, 
-        officer: officerFilter === "all" ? undefined : officerFilter 
+        endDate,
       }),
   });
 
-  const statistics: OfficerStatistics[] = statisticsQuery.data?.statistics ?? [];
   const auditLogs: AuditLog[] = auditLogsQuery.data?.logs ?? [];
 
   const totalStats = useMemo(() => {
-    return statistics.reduce(
-      (acc, stat) => ({
-        totalProcessed: acc.totalProcessed + stat.totalProcessed,
-        accepted: acc.accepted + stat.accepted,
-        rejected: acc.rejected + stat.rejected,
-        rescheduled: acc.rescheduled + stat.rescheduled,
-        completed: acc.completed + stat.completed,
-      }),
-      {
-        totalProcessed: 0,
-        accepted: 0,
-        rejected: 0,
-        rescheduled: 0,
-        completed: 0,
-      }
-    );
-  }, [statistics]);
+    const data = appointments.data ?? [];
+    
+    // Calculate stats from actual appointment statuses
+    const confirmed = data.filter(a => a.status === 'confirmed').length;
+    const rejected = data.filter(a => a.status === 'rejected').length;
+    const rescheduled = data.filter(a => a.status === 'rescheduled').length;
+    const completed = data.filter(a => a.status === 'completed').length;
+    const totalProcessed = confirmed + rejected + rescheduled + completed;
+    
+    return {
+      totalProcessed,
+      accepted: confirmed,
+      rejected,
+      rescheduled,
+      completed,
+    };
+  }, [appointments.data]);
 
-  const isLoading = statisticsQuery.isLoading || auditLogsQuery.isLoading;
+  const isLoading = appointments.isLoading || auditLogsQuery.isLoading;
 
   if (isLoading) return <LoadState />;
 
@@ -132,25 +127,7 @@ export function AuditStatistics({ className }: AuditStatisticsProps) {
 
       {/* Filters */}
       <Card className="p-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <div>
-            <Label htmlFor="officer-filter" className="text-sm font-medium mb-1.5 block">
-              Filter by Officer
-            </Label>
-            <select
-              id="officer-filter"
-              value={officerFilter}
-              onChange={(e) => setOfficerFilter(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background"
-            >
-              <option value="all">All Officers</option>
-              {statistics.map((stat) => (
-                <option key={stat.officerEmail} value={stat.officerEmail}>
-                  {stat.officerName}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <Label htmlFor="start-date" className="text-sm font-medium mb-1.5 block">
               Start Date
@@ -181,7 +158,6 @@ export function AuditStatistics({ className }: AuditStatisticsProps) {
               onClick={() => {
                 setStartDate("");
                 setEndDate("");
-                setOfficerFilter("all");
               }}
               className="w-full"
             >
@@ -190,60 +166,6 @@ export function AuditStatistics({ className }: AuditStatisticsProps) {
           </div>
         </div>
       </Card>
-
-      {/* Officer Performance Cards */}
-      <div className="space-y-3">
-        <h3 className="text-lg font-semibold">Officer Performance</h3>
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-          {statistics.map((stat) => (
-            <Card key={stat.officerEmail} className="p-4 space-y-3">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                    <User className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-semibold">{stat.officerName}</p>
-                    <p className="text-xs text-muted-foreground">{stat.officerEmail}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                    {stat.totalProcessed}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Total</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-4 gap-2 text-xs">
-                <div className="text-center">
-                  <p className="font-semibold text-green-600 dark:text-green-400">{stat.accepted}</p>
-                  <p className="text-muted-foreground">Accept</p>
-                </div>
-                <div className="text-center">
-                  <p className="font-semibold text-red-600 dark:text-red-400">{stat.rejected}</p>
-                  <p className="text-muted-foreground">Reject</p>
-                </div>
-                <div className="text-center">
-                  <p className="font-semibold text-blue-600 dark:text-blue-400">{stat.rescheduled}</p>
-                  <p className="text-muted-foreground">Resched</p>
-                </div>
-                <div className="text-center">
-                  <p className="font-semibold text-purple-600 dark:text-purple-400">{stat.completed}</p>
-                  <p className="text-muted-foreground">Done</p>
-                </div>
-              </div>
-
-              {stat.lastActive && (
-                <div className="pt-2 border-t border-border flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Clock className="h-3.5 w-3.5" />
-                  Last active {formatTimeAgo(stat.lastActive)}
-                </div>
-              )}
-            </Card>
-          ))}
-        </div>
-      </div>
 
       {/* Audit Logs */}
       <div className="space-y-3">

@@ -237,9 +237,11 @@ export default function AdminAppointmentsPage() {
     const appointment = appointments.data?.find(apt => apt.id === appointmentId);
     const isAdmin = user?.role === "admin";
     
+    // If clicking the same appointment that's already locked, unlock it
     if (lockedAppointmentId === appointmentId) {
-      // Unlock current appointment
+      console.log('🔓 Unlocking appointment:', appointmentId);
       unlockMutation.mutate({ id: appointmentId, officerEmail: user.email });
+      return; // Exit early to prevent locking logic from running
     } else {
       // Check if already locked by someone else (race condition check)
       // Admins can override any lock, officers cannot
@@ -317,7 +319,21 @@ export default function AdminAppointmentsPage() {
   const pendingCount = useMemo(() => {
     const data = appointments.data ?? [];
     const processedStatuses: AppointmentStatus[] = ["confirmed", "rejected", "rescheduled", "completed", "no-show"];
-    return data.filter(apt => !processedStatuses.includes(apt.status)).length;
+    const pending = data.filter(apt => !processedStatuses.includes(apt.status));
+    
+    // Debug logging
+    console.log('📋 All appointments:', data.length);
+    console.log('📊 Status breakdown:', {
+      pending: data.filter(a => a.status === 'pending').length,
+      scheduled: data.filter(a => a.status === 'scheduled').length,
+      confirmed: data.filter(a => a.status === 'confirmed').length,
+      rescheduled: data.filter(a => a.status === 'rescheduled').length,
+      rejected: data.filter(a => a.status === 'rejected').length,
+      completed: data.filter(a => a.status === 'completed').length,
+      noShow: data.filter(a => a.status === 'no-show').length,
+    });
+    
+    return pending.length;
   }, [appointments.data]);
 
   const processedCount = useMemo(() => {
@@ -416,7 +432,11 @@ export default function AdminAppointmentsPage() {
                           type="radio"
                           name="appointment-select-mobile"
                           checked={lockedAppointmentId === appointment.id}
-                          onChange={() => handleLockToggle(appointment.id)}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleLockToggle(appointment.id);
+                          }}
+                          onChange={() => {}} 
                           disabled={locked && lockedAppointmentId !== appointment.id}
                           className="h-4 w-4 cursor-pointer disabled:cursor-not-allowed"
                         />
@@ -530,7 +550,11 @@ export default function AdminAppointmentsPage() {
                             type="radio"
                             name="appointment-select"
                             checked={lockedAppointmentId === appointment.id}
-                            onChange={() => handleLockToggle(appointment.id)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleLockToggle(appointment.id);
+                            }}
+                            onChange={() => {}}
                             disabled={locked && lockedAppointmentId !== appointment.id}
                             className="h-4 w-4 cursor-pointer disabled:cursor-not-allowed"
                           />
