@@ -180,7 +180,7 @@ export function AssignDoctorDialog({
         <DialogHeader>
           <DialogTitle className="text-xl">Assign Doctor to Appointment</DialogTitle>
           <DialogDescription>
-            Select a date, time, and available doctor for this appointment. Assigning a doctor will automatically confirm the appointment.
+            Select an available doctor for the patient's requested appointment. Assigning a doctor will automatically confirm the appointment.
           </DialogDescription>
         </DialogHeader>
 
@@ -257,51 +257,31 @@ export function AssignDoctorDialog({
               )}
             </div>
 
-            {/* Date and Time Selection */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold flex items-center gap-2">
+            {/* Requested Date and Time Display (Read-only) */}
+            <div className="rounded-lg border bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 p-4">
+              <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                Select Appointment Date & Time
+                Requested Appointment Date & Time
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="appointment-date" className="text-sm font-medium mb-1.5 block">
-                    Date
-                  </Label>
-                  <Input
-                    id="appointment-date"
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => {
-                      setSelectedDate(e.target.value);
-                      setSelectedDoctorId(""); // Reset doctor selection
-                    }}
-                    className="text-sm"
-                  />
-                  {appointmentDay && (
-                    <p className="text-xs text-muted-foreground mt-1">{appointmentDay}</p>
-                  )}
+                  <p className="text-xs text-muted-foreground mb-1">Date</p>
+                  <div className="flex items-center gap-2 text-base font-semibold">
+                    <Calendar className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    {appointmentDay || selectedDate}
+                  </div>
                 </div>
                 <div>
-                  <Label htmlFor="appointment-time" className="text-sm font-medium mb-1.5 block">
-                    Time (24-hour format)
-                  </Label>
-                  <Input
-                    id="appointment-time"
-                    type="time"
-                    value={selectedTime}
-                    onChange={(e) => {
-                      setSelectedTime(e.target.value);
-                      setSelectedDoctorId(""); // Reset doctor selection
-                    }}
-                    className="text-sm"
-                    placeholder="HH:mm"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Initially set to: {appointment.time || "not specified"}
-                  </p>
+                  <p className="text-xs text-muted-foreground mb-1">Time</p>
+                  <div className="flex items-center gap-2 text-base font-semibold">
+                    <Clock className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    {selectedTime}
+                  </div>
                 </div>
               </div>
+              <p className="text-xs text-muted-foreground mt-3 italic">
+                This is the date and time requested by the patient. Available doctors shown below match this schedule.
+              </p>
             </div>
 
             {/* Available Doctors */}
