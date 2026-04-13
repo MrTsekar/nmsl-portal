@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect } from "react";
 import { useAutoLogout } from "@/hooks/use-auto-logout";
 import { InactivityWarningModal } from "@/components/inactivity-warning-modal";
+import { useAuthStore } from "@/store/auth-store";
 
 /**
  * Auto-logout provider component
@@ -24,6 +26,16 @@ import { InactivityWarningModal } from "@/components/inactivity-warning-modal";
  * ```
  */
 export function AutoLogoutProvider({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, user } = useAuthStore();
+  
+  useEffect(() => {
+    console.log("🛡️ AutoLogoutProvider mounted", { 
+      isAuthenticated, 
+      userEmail: user?.email,
+      timestamp: new Date().toISOString() 
+    });
+  }, [isAuthenticated, user?.email]);
+
   const { showWarning, timeRemaining, stayActive, logout } = useAutoLogout({
     timeout: 15 * 60 * 1000, // 15 minutes
     warningTime: 60 * 1000,  // 1 minute warning

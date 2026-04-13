@@ -124,6 +124,7 @@ export function useAutoLogout(options: AutoLogoutOptions = {}): AutoLogoutState 
    * Perform logout - clear tokens and redirect
    */
   const logout = useCallback(() => {
+    console.log("🔒 Auto-logout: Logging out user due to inactivity");
     clearTimers();
     setShowWarning(false);
 
@@ -163,6 +164,7 @@ export function useAutoLogout(options: AutoLogoutOptions = {}): AutoLogoutState 
    * Show warning modal
    */
   const showWarningModal = useCallback(() => {
+    console.log("⚠️ Auto-logout: Showing inactivity warning (1 minute remaining)");
     setShowWarning(true);
     startCountdown();
     options.onWarning?.();
@@ -176,7 +178,12 @@ export function useAutoLogout(options: AutoLogoutOptions = {}): AutoLogoutState 
     setShowWarning(false);
     lastActivityRef.current = Date.now();
 
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) {
+      console.log("⏭️ Auto-logout: User not authenticated, skipping timer setup");
+      return;
+    }
+
+    console.log("⏱️ Auto-logout: Timer reset - 15 minutes until warning");
 
     // Set warning timer (14 minutes for 15-minute timeout)
     const warningDelay = config.timeout - config.warningTime;
@@ -197,9 +204,6 @@ export function useAutoLogout(options: AutoLogoutOptions = {}): AutoLogoutState 
    * Throttled activity handler
    */
   const handleActivity = useCallback(() => {
-    // Only reset if not showing warning
-    if (showWarning) return;
-
     // Throttle activity events
     if (throttleRef.current) return;
 
@@ -207,13 +211,29 @@ export function useAutoLogout(options: AutoLogoutOptions = {}): AutoLogoutState 
       throttleRef.current = null;
     }, config.throttleDelay);
 
-    // Update last activity time
+    // Update last activity time and reset timer
     const now = Date.now();
     if (now - lastActivityRef.current > config.throttleDelay) {
       lastActivityRef.current = now;
-      resetTimer();
+      
+      // Only reset timer if not showing warning and user is authenticated
+      if (!showWarning && isAuthenticated) {
+        // Clear existing timers
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        if (warningTimeoutRef.current) clearTimeout(warningTimeoutRef.current);
+        
+        // Set new timers
+        const warningDelay = config.timeout - config.warningTime;
+        warningTimeoutRef.current = setTimeout(() => {
+          setShowWarning(true);
+          startCountdown();
+          options.onWarning?.();
+        }, warningDelay);
+        
+        timeoutRef.current = setTimeout(logout, config.timeout);
+      }
     }
-  }, [showWarning, config.throttleDelay, resetTimer]);
+  }, [showWarning, isAuthenticated, config.throttleDelay, config.timeout, config.warningTime, startCountdown, logout, options]);
 
   /**
    * Setup event listeners on mount
@@ -223,6 +243,8 @@ export function useAutoLogout(options: AutoLogoutOptions = {}): AutoLogoutState 
       clearTimers();
       return;
     }
+
+    console.log("🔄 Auto-logout: Starting 15-minute timer");
 
     // Start initial timer
     resetTimer();
@@ -255,12 +277,14 @@ export function useAutoLogout(options: AutoLogoutOptions = {}): AutoLogoutState 
 
     // Cleanup on unmount
     return () => {
+      console.log("🧹 Auto-logout: Cleaning up timers and event listeners");
       clearTimers();
       config.events.forEach((event) => {
         window.removeEventListener(event, handleActivity, listenerOptions);
       });
     };
-  }, [isAuthenticated, config.events, handleActivity, resetTimer, clearTimers]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]); // Only re-run when authentication status changes
 
   /**
    * Handle visibility change (tab switching)

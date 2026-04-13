@@ -48,33 +48,81 @@ export function AssignDoctorDialog({
   const [selectedTime, setSelectedTime] = useState("");
   const [selectedDoctorId, setSelectedDoctorId] = useState("");
   const [isAssigning, setIsAssigning] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
+
+  // Debug logging
+  useEffect(() => {
+    if (open) {
+      console.log("Assign Doctor Dialog opened with appointment:", {
+        id: appointment?.id,
+        date: appointment?.date,
+        time: appointment?.time,
+        patientName: appointment?.patientName,
+      });
+      setIsInitializing(true);
+    }
+  }, [open, appointment]);
 
   // Reset and initialize when appointment changes
   useEffect(() => {
     if (appointment && open) {
-      // Parse the date from appointment
-      const appointmentDate = new Date(appointment.date);
-      const formattedDate = appointmentDate.toISOString().split("T")[0]; // YYYY-MM-DD
-      setSelectedDate(formattedDate);
-      setSelectedTime(appointment.time || "");
-      setSelectedDoctorId("");
+      try {
+        // Parse the date from appointment
+        if (appointment.date) {
+          const appointmentDate = new Date(appointment.date);
+          // Check if date is valid
+          if (!isNaN(appointmentDate.getTime())) {
+            const formattedDate = appointmentDate.toISOString().split("T")[0]; // YYYY-MM-DD
+            setSelectedDate(formattedDate);
+          } else {
+            console.error("Invalid appointment date:", appointment.date);
+            setSelectedDate("");
+          }
+        } else {
+          setSelectedDate("");
+        }
+        setSelectedTime(appointment.time || "");
+        setSelectedDoctorId("");
+        
+        // Small delay to ensure state is set before allowing API calls
+        setTimeout(() => {
+          setIsInitializing(false);
+        }, 100);
+      } catch (error) {
+        console.error("Error parsing appointment date:", error);
+        setSelectedDate("");
+        setSelectedTime("");
+        setSelectedDoctorId("");
+        setIsInitializing(false);
+      }
     } else {
       setSelectedDate("");
       setSelectedTime("");
       setSelectedDoctorId("");
+      setIsInitializing(true);
     }
   }, [appointment, open]);
 
   // Fetch available doctors when date/time changes
   const { data: availableDoctors = [], isLoading: loadingDoctors, error: doctorsError } = useQuery({
     queryKey: ["available-doctors", appointment?.id, selectedDate, selectedTime],
-    queryFn: () => {
+    queryFn: async () => {
       if (!appointment?.id || !selectedDate || !selectedTime) {
-        return Promise.resolve([]);
+        return [];
       }
-      return adminApi.getAvailableDoctors(appointment.id, selectedDate, selectedTime);
+      try {
+        console.log("Fetching available doctors for:", { appointmentId: appointment.id, selectedDate, selectedTime });
+        const doctors = await adminApi.getAvailableDoctors(appointment.id, selectedDate, selectedTime);
+        console.log("Available doctors fetched:", doctors.length);
+        return doctors;
+      } catch (error) {
+        console.error("Error fetching available doctors:", error);
+        throw error;
+      }
     },
-    enabled: Boolean(appointment?.id && selectedDate && selectedTime),
+    enabled: Boolean(open && !isInitializing && appointment?.id && selectedDate && selectedTime), // Wait for initialization to complete
+    retry: 1,
+    staleTime: 0, // Always fetch fresh data when dialog opens
   });
 
   const handleAssign = async () => {
@@ -102,10 +150,28 @@ export function AssignDoctorDialog({
   const selectedDoctor = availableDoctors.find((d: Doctor) => d.id === selectedDoctorId);
 
   const appointmentDay = selectedDate
-    ? new Date(selectedDate).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric", year: "numeric" })
+    ? (() => {
+        try {
+          return new Date(selectedDate).toLocaleDateString("en-US", { 
+            weekday: "long", 
+            month: "short", 
+            day: "numeric", 
+            year: "numeric" 
+          });
+        } catch (error) {
+          console.error("Error formatting date:", error);
+          return "";
+        }
+      })()
     : "";
 
   const canAssign = selectedDoctorId && selectedDate && selectedTime && !isAssigning;
+
+  // Don't render if appointment is null
+  if (open && !appointment) {
+    console.error("AssignDoctorDialog opened without an appointment");
+    return null;
+  }
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -117,7 +183,14 @@ export function AssignDoctorDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {appointment && (
+        {isInitializing ? (
+          <div className="flex-1 flex items-center justify-center p-12">
+            <div className="text-center">
+              <Loader2 className="h-8 w-8 mx-auto mb-3 animate-spin text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Loading appointment details...</p>
+            </div>
+          </div>
+        ) : appointment ? (
           <div className="flex-1 overflow-y-auto space-y-5 py-2">
             {/* Patient Info */}
             <div className="rounded-lg border bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 p-4">
@@ -351,6 +424,10 @@ export function AssignDoctorDialog({
                 </div>
               </div>
             )}
+          </div>
+        ) : (
+          <div className="flex-1 flex items-center justify-center p-8">
+            <p className="text-muted-foreground">No appointment selected</p>
           </div>
         )}
 

@@ -161,6 +161,10 @@ export default function AdminAppointmentsPage() {
         unlockMutation.mutate({ id, officerEmail: user.email });
       }
     },
+    onError: (error) => {
+      console.error("Failed to assign doctor:", error);
+      // Keep dialog open on error so user can retry
+    },
   });
 
   const rescheduleMutation = useMutation({
@@ -211,11 +215,19 @@ export default function AdminAppointmentsPage() {
   }, [appointments.data, search, status]);
 
   const handleAssignDoctor = async (appointmentId: string, doctorId: string, appointmentDate: string, appointmentTime: string) => {
-    assignMutation.mutate({
-      id: appointmentId,
-      doctorId,
-      appointmentDate,
-      appointmentTime,
+    return new Promise<void>((resolve, reject) => {
+      assignMutation.mutate(
+        {
+          id: appointmentId,
+          doctorId,
+          appointmentDate,
+          appointmentTime,
+        },
+        {
+          onSuccess: () => resolve(),
+          onError: (error) => reject(error),
+        }
+      );
     });
   };
 
