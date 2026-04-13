@@ -67,21 +67,33 @@ export function AssignDoctorDialog({
   useEffect(() => {
     if (appointment && open) {
       try {
+        // Handle both 'date' and 'appointmentDate' field names from backend
+        const dateValue = (appointment as any).date || (appointment as any).appointmentDate;
+        const timeValue = (appointment as any).time || (appointment as any).appointmentTime;
+        
         // Parse the date from appointment
-        if (appointment.date) {
-          const appointmentDate = new Date(appointment.date);
+        if (dateValue) {
+          const appointmentDate = new Date(dateValue);
           // Check if date is valid
           if (!isNaN(appointmentDate.getTime())) {
             const formattedDate = appointmentDate.toISOString().split("T")[0]; // YYYY-MM-DD
             setSelectedDate(formattedDate);
           } else {
-            console.error("Invalid appointment date:", appointment.date);
+            console.error("Invalid appointment date:", dateValue);
             setSelectedDate("");
           }
         } else {
+          console.warn("No date found in appointment:", appointment);
           setSelectedDate("");
         }
-        setSelectedTime(appointment.time || "");
+        
+        if (timeValue) {
+          setSelectedTime(timeValue);
+        } else {
+          console.warn("No time found in appointment:", appointment);
+          setSelectedTime("");
+        }
+        
         setSelectedDoctorId("");
         
         // Small delay to ensure state is set before allowing API calls
