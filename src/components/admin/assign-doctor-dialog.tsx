@@ -257,32 +257,53 @@ export function AssignDoctorDialog({
               )}
             </div>
 
-            {/* Requested Date and Time Display (Read-only) */}
-            <div className="rounded-lg border bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 p-4">
-              <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                Requested Appointment Date & Time
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Date</p>
-                  <div className="flex items-center gap-2 text-base font-semibold">
-                    <Calendar className="h-4 w-4 text-green-600 dark:text-green-400" />
-                    {appointmentDay || selectedDate}
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Time</p>
-                  <div className="flex items-center gap-2 text-base font-semibold">
-                    <Clock className="h-4 w-4 text-green-600 dark:text-green-400" />
-                    {selectedTime}
+            {/* Check if time is specified */}
+            {!selectedTime || !selectedDate ? (
+              <div className="rounded-lg border-2 border-red-200 bg-red-50 dark:bg-red-950/20 p-6">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-base font-semibold text-red-900 dark:text-red-100 mb-2">
+                      Incomplete Appointment Information
+                    </p>
+                    <p className="text-sm text-red-700 dark:text-red-300 mb-3">
+                      This appointment does not have a {!selectedDate && "date"}{!selectedDate && !selectedTime && " or "}{!selectedTime && "time"} specified. 
+                      You cannot assign a doctor without this information.
+                    </p>
+                    <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                      Please use the <strong>"Reschedule"</strong> button to set a valid date and time for this appointment.
+                    </p>
                   </div>
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground mt-3 italic">
-                This is the date and time requested by the patient. Available doctors shown below match this schedule.
-              </p>
-            </div>
+            ) : (
+              <>
+                {/* Requested Date and Time Display (Read-only) */}
+                <div className="rounded-lg border bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 p-4">
+                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Requested Appointment Date & Time
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Date</p>
+                      <div className="flex items-center gap-2 text-base font-semibold">
+                        <Calendar className="h-4 w-4 text-green-600 dark:text-green-400" />
+                        {appointmentDay || selectedDate}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Time</p>
+                      <div className="flex items-center gap-2 text-base font-semibold">
+                        <Clock className="h-4 w-4 text-green-600 dark:text-green-400" />
+                        {selectedTime}
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-3 italic">
+                    This is the date and time requested by the patient. Available doctors shown below match this schedule.
+                  </p>
+                </div>
 
             {/* Available Doctors */}
             {selectedDate && selectedTime && (
@@ -390,7 +411,7 @@ export function AssignDoctorDialog({
             )}
 
             {/* Warning about auto-acceptance */}
-            {selectedDoctorId && (
+            {selectedDoctorId && selectedDate && selectedTime && (
               <div className="rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-950/20 p-4">
                 <div className="flex items-start gap-3">
                   <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
@@ -404,6 +425,8 @@ export function AssignDoctorDialog({
                   </div>
                 </div>
               </div>
+            )}
+              </>
             )}
           </div>
         ) : (
