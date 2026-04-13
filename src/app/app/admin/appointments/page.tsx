@@ -151,8 +151,8 @@ export default function AdminAppointmentsPage() {
   });
 
   const assignMutation = useMutation({
-    mutationFn: ({ id, doctorId, timeSlot }: { id: string; doctorId: string; timeSlot: string }) =>
-      adminApi.assignDoctor(id, doctorId, timeSlot),
+    mutationFn: ({ id, doctorId, appointmentDate, appointmentTime }: { id: string; doctorId: string; appointmentDate: string; appointmentTime: string }) =>
+      adminApi.assignDoctor(id, doctorId, appointmentDate, appointmentTime),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["appointments"] });
       setAssignTarget(null);
@@ -210,12 +210,12 @@ export default function AdminAppointmentsPage() {
     });
   }, [appointments.data, search, status]);
 
-  const handleAssignDoctor = (doctorId: string, timeSlot: string) => {
-    if (!assignTarget) return;
+  const handleAssignDoctor = async (appointmentId: string, doctorId: string, appointmentDate: string, appointmentTime: string) => {
     assignMutation.mutate({
-      id: assignTarget.id,
+      id: appointmentId,
       doctorId,
-      timeSlot,
+      appointmentDate,
+      appointmentTime,
     });
   };
 
@@ -718,7 +718,6 @@ export default function AdminAppointmentsPage() {
         open={Boolean(assignTarget)}
         onOpenChange={(open) => !open && setAssignTarget(null)}
         appointment={assignTarget}
-        doctors={doctors.data ?? []}
         onAssign={handleAssignDoctor}
       />
 

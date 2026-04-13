@@ -64,8 +64,8 @@ export function AuditStatistics({ className }: AuditStatisticsProps) {
     queryKey: ["audit-logs", startDate, endDate],
     queryFn: () => 
       adminApi.getAuditLogs({ 
-        startDate, 
-        endDate,
+        ...(startDate && { startDate }), 
+        ...(endDate && { endDate }),
       }),
   });
 

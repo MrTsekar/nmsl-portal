@@ -1,5 +1,5 @@
 ﻿import { apiClient } from "@/lib/api/client";
-import type { User, Appointment, DoctorAvailabilitySchedule } from "@/types";
+import type { User, Appointment, DoctorAvailabilitySchedule, Doctor } from "@/types";
 
 export const adminApi = {
   getKpis: async () => {
@@ -89,8 +89,24 @@ export const adminApi = {
     return data;
   },
 
-  assignDoctor: async (id: string, doctorId: string, timeSlot: string): Promise<Appointment> => {
-    const { data } = await apiClient.patch(`/admin/appointments/${id}/assign-doctor`, { doctorId, timeSlot });
+  getAvailableDoctors: async (appointmentId: string, date: string, time: string): Promise<Doctor[]> => {
+    const { data } = await apiClient.get(`/admin/appointments/${appointmentId}/available-doctors`, {
+      params: { date, time },
+    });
+    return Array.isArray(data) ? data : [];
+  },
+
+  assignDoctor: async (
+    appointmentId: string,
+    doctorId: string,
+    appointmentDate: string,
+    appointmentTime: string
+  ): Promise<Appointment> => {
+    const { data } = await apiClient.patch(`/admin/appointments/${appointmentId}/assign-doctor`, {
+      doctorId,
+      appointmentDate,
+      appointmentTime,
+    });
     return data;
   },
 
