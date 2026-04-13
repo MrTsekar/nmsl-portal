@@ -114,6 +114,7 @@ export function AssignDoctorDialog({
         console.log("Fetching available doctors for:", { appointmentId: appointment.id, selectedDate, selectedTime });
         const doctors = await adminApi.getAvailableDoctors(appointment.id, selectedDate, selectedTime);
         console.log("Available doctors fetched:", doctors.length);
+        console.log("Available doctors data:", JSON.stringify(doctors, null, 2));
         return doctors;
       } catch (error) {
         console.error("Error fetching available doctors:", error);

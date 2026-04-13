@@ -48,7 +48,8 @@ export default function AdminDoctorsPage() {
   const availabilityMutation = useMutation({
     mutationFn: ({ doctorId, schedule }: { doctorId: string; schedule: DoctorAvailability }) =>
       adminApi.updateDoctorAvailability(doctorId, schedule),
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('[AVAILABILITY MUTATION SUCCESS] Response from backend:', data);
       queryClient.invalidateQueries({ queryKey: ["doctors"] });
       setIsAvailabilityDialogOpen(false);
       setAvailabilityError(null);
@@ -113,6 +114,7 @@ export default function AdminDoctorsPage() {
   };
 
   const handleSaveAvailability = (availabilityData: DoctorAvailability) => {
+    console.log('[SAVE AVAILABILITY] Data being sent to backend:', JSON.stringify(availabilityData, null, 2));
     availabilityMutation.mutate({
       doctorId: availabilityData.doctorId,
       schedule: availabilityData,
