@@ -40,6 +40,7 @@ export default function AdminBoardMembersPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm());
 
   useEffect(() => {
@@ -54,13 +55,17 @@ export default function AdminBoardMembersPage() {
     if (!file) return;
 
     try {
+      setUploadError(null);
       setUploading(true);
 
       // Step 1: Get signed upload URL from backend
       const { data } = await boardMembersApi.getUploadUrl(file.name, file.type);
+      if (!data?.uploadUrl || !data?.finalUrl) {
+        throw new Error("Backend did not return a valid upload URL");
+      }
 
       // Step 2: Upload directly to Azure
-      await fetch(data.uploadUrl, {
+      const uploadRes = await fetch(data.uploadUrl, {
         method: "PUT",
         body: file,
         headers: {
@@ -68,11 +73,16 @@ export default function AdminBoardMembersPage() {
           "Content-Type": file.type,
         },
       });
+      if (!uploadRes.ok) {
+        throw new Error(`Azure upload failed: ${uploadRes.status} ${uploadRes.statusText}`);
+      }
 
       // Step 3: Save final URL to form
-      setForm({ ...form, photoUrl: data.finalUrl });
+      setForm((prev) => ({ ...prev, photoUrl: data.finalUrl }));
     } catch (error) {
       console.error("Failed to upload photo:", error);
+      const msg = error instanceof Error ? error.message : "Upload failed. Please try again.";
+      setUploadError(msg);
     } finally {
       setUploading(false);
     }
@@ -80,6 +90,7 @@ export default function AdminBoardMembersPage() {
 
   const openCreate = () => {
     setEditingId(null);
+    setUploadError(null);
     setForm({
       ...emptyForm(),
       order: members.length + 1,
@@ -89,6 +100,7 @@ export default function AdminBoardMembersPage() {
 
   const openEdit = (member: BoardMember) => {
     setEditingId(member.id);
+    setUploadError(null);
     setForm({
       name: member.name,
       title: member.title,
@@ -281,6 +293,9 @@ export default function AdminBoardMembersPage() {
                 {uploading && (
                   <p className="text-sm text-blue-600">Uploading photo...</p>
                 )}
+                {uploadError && !uploading && (
+                  <p className="text-sm text-red-600">⚠ {uploadError}</p>
+                )}
                 {form.photoUrl && !uploading && (
                   <div className="flex items-center gap-2">
                     <div className="relative w-20 h-20 rounded-lg overflow-hidden border">
@@ -336,13 +351,24 @@ export default function AdminBoardMembersPage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSubmit} disabled={saving || !form.name || !form.title || !form.photoUrl}>
-              {saving ? "Saving..." : editingId ? "Update" : "Create"}
-            </Button>
+          <div className="flex flex-col gap-2">
+            {!saving && (!form.name || !form.title || !form.photoUrl) && (
+              <p className="text-xs text-amber-600 text-right">
+                Please complete: {[
+                  !form.name && "Full Name",
+                  !form.title && "Title",
+                  !form.photoUrl && "Photo upload",
+                ].filter(Boolean).join(", ")}
+              </p>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSubmit} disabled={saving || uploading || !form.name || !form.title || !form.photoUrl}>
+                {saving ? "Saving..." : editingId ? "Update" : "Create"}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

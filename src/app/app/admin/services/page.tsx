@@ -427,11 +427,21 @@ export default function AdminServicesPage() {
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-border/50">
-              <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={saving}>Cancel</Button>
-              <Button onClick={handleSave} disabled={saving || !form.name.trim() || !form.shortDescription.trim()}>
-                {saving ? "Saving..." : editingId ? "Save changes" : "Create service"}
-              </Button>
+            <div className="flex flex-col gap-2 pt-2 border-t border-border/50">
+              {!saving && (!form.name.trim() || !form.shortDescription.trim()) && (
+                <p className="text-xs text-amber-600 text-right">
+                  Please complete: {[
+                    !form.name.trim() && "Service Name",
+                    !form.shortDescription.trim() && "Short Description",
+                  ].filter(Boolean).join(", ")}
+                </p>
+              )}
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={saving}>Cancel</Button>
+                <Button onClick={handleSave} disabled={saving || uploadingBanner || uploadingIcon || !form.name.trim() || !form.shortDescription.trim()}>
+                  {saving ? "Saving..." : editingId ? "Save changes" : "Create service"}
+                </Button>
+              </div>
             </div>
           </div>
         </DialogContent>
