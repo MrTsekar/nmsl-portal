@@ -280,35 +280,57 @@ export default function AdminBoardMembersPage() {
             </div>
 
             <div>
-              <Label htmlFor="photoUrl">Photo *</Label>
-              <div className="space-y-2">
-                <Input
-                  id="photo-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoUpload}
-                  disabled={uploading}
-                  className="cursor-pointer"
-                />
-                {uploading && (
-                  <p className="text-sm text-blue-600">Uploading photo...</p>
-                )}
-                {uploadError && !uploading && (
-                  <p className="text-sm text-red-600">⚠ {uploadError}</p>
-                )}
-                {form.photoUrl && !uploading && (
-                  <div className="flex items-center gap-2">
-                    <div className="relative w-20 h-20 rounded-lg overflow-hidden border">
-                      <Image
-                        src={form.photoUrl}
-                        alt="Preview"
-                        fill
-                        className="object-cover"
-                      />
+              <Label htmlFor="photo-upload">Photo *</Label>
+              <div className="mt-1.5 flex items-start gap-4">
+                {/* Preview tile */}
+                <div className="relative w-24 h-24 shrink-0 rounded-lg overflow-hidden border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center">
+                  {uploading ? (
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+                      <span className="text-[10px] text-blue-600">Uploading</span>
                     </div>
-                    <p className="text-sm text-green-600">Photo uploaded successfully</p>
-                  </div>
-                )}
+                  ) : form.photoUrl ? (
+                    <Image
+                      src={form.photoUrl}
+                      alt="Preview"
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                  ) : (
+                    <UserCircle className="h-10 w-10 text-slate-300" />
+                  )}
+                </div>
+
+                {/* Upload control */}
+                <div className="flex-1 min-w-0 space-y-2">
+                  <label
+                    htmlFor="photo-upload"
+                    className={`inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded-md border border-slate-300 bg-white hover:bg-slate-50 cursor-pointer transition-colors ${uploading ? "opacity-50 cursor-not-allowed" : ""}`}
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    {form.photoUrl ? "Replace photo" : "Choose photo"}
+                  </label>
+                  <Input
+                    id="photo-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoUpload}
+                    disabled={uploading}
+                    className="hidden"
+                  />
+                  {form.photoUrl && !uploading && !uploadError && (
+                    <p className="text-xs text-green-600 flex items-center gap-1">
+                      <span>✓</span> Photo uploaded successfully
+                    </p>
+                  )}
+                  {uploadError && !uploading && (
+                    <p className="text-xs text-red-600">⚠ {uploadError}</p>
+                  )}
+                  {!form.photoUrl && !uploading && !uploadError && (
+                    <p className="text-xs text-slate-500">JPG, PNG, or GIF. Square images work best.</p>
+                  )}
+                </div>
               </div>
             </div>
 
