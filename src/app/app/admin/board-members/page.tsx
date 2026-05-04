@@ -18,7 +18,7 @@ import Image from "next/image";
 type FormState = {
   name: string;
   title: string;
-  photoUrl: string;
+  image: string;
   bio: string;
   order: number;
   isActive: boolean;
@@ -27,7 +27,7 @@ type FormState = {
 const emptyForm = (): FormState => ({
   name: "",
   title: "",
-  photoUrl: "",
+  image: "",
   bio: "",
   order: 0,
   isActive: true,
@@ -57,14 +57,17 @@ export default function AdminBoardMembersPage() {
     try {
       setUploadError(null);
       setUploading(true);
+      console.log(`[BoardMembers] Starting upload: ${file.name} (${file.type}, ${file.size} bytes)`);
 
       // Step 1: Get signed upload URL from backend
       const { data } = await boardMembersApi.getUploadUrl(file.name, file.type);
+      console.log('[BoardMembers] Got SAS URL response:', data);
       if (!data?.uploadUrl || !data?.finalUrl) {
         throw new Error("Backend did not return a valid upload URL");
       }
 
       // Step 2: Upload directly to Azure
+      console.log('[BoardMembers] PUTing file to Azure...');
       const uploadRes = await fetch(data.uploadUrl, {
         method: "PUT",
         body: file,
@@ -73,14 +76,16 @@ export default function AdminBoardMembersPage() {
           "Content-Type": file.type,
         },
       });
+      console.log(`[BoardMembers] Azure response: ${uploadRes.status} ${uploadRes.statusText}`);
       if (!uploadRes.ok) {
         throw new Error(`Azure upload failed: ${uploadRes.status} ${uploadRes.statusText}`);
       }
 
       // Step 3: Save final URL to form
-      setForm((prev) => ({ ...prev, photoUrl: data.finalUrl }));
+      console.log('[BoardMembers] ✅ Upload complete. finalUrl:', data.finalUrl);
+      setForm((prev) => ({ ...prev, image: data.finalUrl }));
     } catch (error) {
-      console.error("Failed to upload photo:", error);
+      console.error("[BoardMembers] ❌ Failed to upload photo:", error);
       const msg = error instanceof Error ? error.message : "Upload failed. Please try again.";
       setUploadError(msg);
     } finally {
@@ -104,7 +109,7 @@ export default function AdminBoardMembersPage() {
     setForm({
       name: member.name,
       title: member.title,
-      photoUrl: member.photoUrl,
+      image: member.image,
       bio: member.bio || "",
       order: member.order,
       isActive: member.isActive,
@@ -115,13 +120,22 @@ export default function AdminBoardMembersPage() {
   const handleSubmit = async () => {
     setSaving(true);
     try {
+      console.log('[BoardMembers] Submitting form:', form);
+      let result;
       if (editingId) {
-        await boardMembersApi.update(editingId, form);
+        console.log(`[BoardMembers] Updating id=${editingId}`);
+        result = await boardMembersApi.update(editingId, form);
       } else {
-        await boardMembersApi.create(form);
+        console.log('[BoardMembers] Creating new board member');
+        result = await boardMembersApi.create(form);
+      }
+      console.log('[BoardMembers] API response:', result);
+      if (!result?.image) {
+        console.warn('[BoardMembers] ⚠ Server returned member with no image field! Backend may have ignored it.');
       }
       setDialogOpen(false);
       const updated = await boardMembersApi.listAll();
+      console.log(`[BoardMembers] Refreshed list (${updated.length} members):`, updated);
       setMembers(updated);
     } finally {
       setSaving(false);
@@ -186,14 +200,16 @@ export default function AdminBoardMembersPage() {
               <Card key={member.id} className="relative group hover:shadow-lg transition-shadow">
                 <CardContent className="p-4 space-y-3">
                   <div className="relative h-40 flex items-center justify-center bg-slate-50 dark:bg-slate-800 rounded-lg overflow-hidden">
-                    {member.photoUrl ? (
+                    {member.image ? (
                       <Image
-                        src={member.photoUrl}
+                        src={member.image}
                         alt={member.name}
                         width={200}
                         height={160}
+                        unoptimized
                         className="object-cover w-full h-full"
                         onError={(e) => {
+                          console.error('[BoardMembers] Image failed to load:', member.image);
                           const target = e.target as HTMLImageElement;
                           target.style.display = "none";
                         }}
@@ -289,9 +305,9 @@ export default function AdminBoardMembersPage() {
                       <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
                       <span className="text-[10px] text-blue-600">Uploading</span>
                     </div>
-                  ) : form.photoUrl ? (
+                  ) : form.image ? (
                     <Image
-                      src={form.photoUrl}
+                      src={form.image}
                       alt="Preview"
                       fill
                       className="object-cover"
@@ -309,7 +325,7 @@ export default function AdminBoardMembersPage() {
                     className={`inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded-md border border-slate-300 bg-white hover:bg-slate-50 cursor-pointer transition-colors ${uploading ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     <Plus className="h-3.5 w-3.5" />
-                    {form.photoUrl ? "Replace photo" : "Choose photo"}
+                    {form.image ? "Replace photo" : "Choose photo"}
                   </label>
                   <Input
                     id="photo-upload"
@@ -319,7 +335,7 @@ export default function AdminBoardMembersPage() {
                     disabled={uploading}
                     className="hidden"
                   />
-                  {form.photoUrl && !uploading && !uploadError && (
+                  {form.image && !uploading && !uploadError && (
                     <p className="text-xs text-green-600 flex items-center gap-1">
                       <span>✓</span> Photo uploaded successfully
                     </p>
@@ -327,7 +343,7 @@ export default function AdminBoardMembersPage() {
                   {uploadError && !uploading && (
                     <p className="text-xs text-red-600">⚠ {uploadError}</p>
                   )}
-                  {!form.photoUrl && !uploading && !uploadError && (
+                  {!form.image && !uploading && !uploadError && (
                     <p className="text-xs text-slate-500">JPG, PNG, or GIF. Square images work best.</p>
                   )}
                 </div>
@@ -374,12 +390,12 @@ export default function AdminBoardMembersPage() {
           </div>
 
           <div className="flex flex-col gap-2">
-            {!saving && (!form.name || !form.title || !form.photoUrl) && (
+            {!saving && (!form.name || !form.title || !form.image) && (
               <p className="text-xs text-amber-600 text-right">
                 Please complete: {[
                   !form.name && "Full Name",
                   !form.title && "Title",
-                  !form.photoUrl && "Photo upload",
+                  !form.image && "Photo upload",
                 ].filter(Boolean).join(", ")}
               </p>
             )}
@@ -387,7 +403,7 @@ export default function AdminBoardMembersPage() {
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleSubmit} disabled={saving || uploading || !form.name || !form.title || !form.photoUrl}>
+              <Button onClick={handleSubmit} disabled={saving || uploading || !form.name || !form.title || !form.image}>
                 {saving ? "Saving..." : editingId ? "Update" : "Create"}
               </Button>
             </div>

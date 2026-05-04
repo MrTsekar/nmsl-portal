@@ -231,7 +231,7 @@ export interface BoardMember {
   id: string;
   name: string;
   title: string;
-  photoUrl: string;
+  image: string;
   bio?: string;
   order: number;
   isActive: boolean;

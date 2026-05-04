@@ -68,9 +68,9 @@ export function BoardOfDirectors() {
             >
               <CardContent className="p-0">
                 <div className="relative w-full h-64 bg-slate-100 dark:bg-slate-700 overflow-hidden">
-                  {member.photoUrl ? (
+                  {member.image ? (
                     <Image
-                      src={member.photoUrl}
+                      src={member.image}
                       alt={member.name}
                       width={300}
                       height={256}
