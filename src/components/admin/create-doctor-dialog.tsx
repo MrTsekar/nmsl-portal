@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import { z } from "zod";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,8 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { adminApi } from "@/lib/api/admin.api";
 import { NIGERIA_LOCATIONS } from "@/lib/constants/locations";
 import { NIGERIAN_STATES } from "@/lib/constants/states";
-import { useAuthStore } from "@/store/auth-store";
-import { MapPin, Lock } from "lucide-react";
+import { MapPin, Upload, CheckCircle2, Loader2 } from "lucide-react";
 
 const LOCATION_OPTIONS = [...NIGERIA_LOCATIONS, "Other"] as const;
 
@@ -40,13 +39,13 @@ const schema = z
   .object({
     name: z.string().min(2, "Name must be at least 2 characters"),
     email: z.string().email("Invalid email address"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
     phone: z.string().min(10, "Phone number must be at least 10 digits"),
     qualifications: z.string().min(2, "Qualifications are required"),
     specialty: z.string().min(2, "Specialty is required"),
     location: z.enum(LOCATION_OPTIONS),
     state: z.string().min(2, "State is required"),
     address: z.string().min(6, "Address must be at least 6 characters"),
+    avatar: z.string().optional(),
   })
   .superRefine((values, context) => {
     if (values.location !== "Other" && !NIGERIAN_STATES.includes(values.state as (typeof NIGERIAN_STATES)[number])) {
@@ -68,25 +67,66 @@ interface CreateDoctorDialogProps {
 
 export function CreateDoctorDialog({ open, onOpenChange, onSuccess }: CreateDoctorDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [photoUploadError, setPhotoUploadError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useAuthStore();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: "",
       email: "",
-      password: "",
       phone: "",
       qualifications: "",
       specialty: "General Practice",
       location: "Abuja",
       state: "FCT",
       address: "",
+      avatar: "",
     },
   });
 
   const selectedLocation = useWatch({ control: form.control, name: "location" });
+  const uploadedAvatarUrl = useWatch({ control: form.control, name: "avatar" });
+
+  const handlePhotoUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setPhotoUploadError(null);
+      setIsUploadingPhoto(true);
+
+      // Step 1: Get signed upload URL from backend
+      const { data } = await adminApi.getDoctorUploadUrl(file.name, file.type);
+      if (!data?.uploadUrl || !data?.finalUrl) {
+        throw new Error("Backend did not return a valid upload URL");
+      }
+
+      // Step 2: Upload directly to Azure
+      const uploadRes = await fetch(data.uploadUrl, {
+        method: "PUT",
+        body: file,
+        headers: {
+          "x-ms-blob-type": "BlockBlob",
+          "Content-Type": file.type,
+        },
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error(`Upload failed: ${uploadRes.status} ${uploadRes.statusText}`);
+      }
+
+      // Step 3: Save final URL in form
+      form.setValue("avatar", data.finalUrl, { shouldDirty: true });
+    } catch (uploadErr) {
+      const message = uploadErr instanceof Error ? uploadErr.message : "Upload failed. Please try again.";
+      setPhotoUploadError(message);
+    } finally {
+      setIsUploadingPhoto(false);
+      e.target.value = "";
+    }
+  };
 
   const onSubmit = async (values: FormValues) => {
     try {
@@ -116,7 +156,7 @@ export function CreateDoctorDialog({ open, onOpenChange, onSuccess }: CreateDoct
         <DialogHeader>
           <DialogTitle>Register New Doctor</DialogTitle>
           <DialogDescription>
-            Create a new doctor account for the platform. The doctor will receive login credentials via email.
+            Create a new doctor account for the platform and optionally upload a profile photo.
           </DialogDescription>
         </DialogHeader>
 
@@ -203,6 +243,51 @@ export function CreateDoctorDialog({ open, onOpenChange, onSuccess }: CreateDoct
             )}
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="doctor-photo">Doctor Photo</Label>
+            <div className="rounded-md border border-border bg-muted/20 p-3">
+              <div className="mb-3 flex items-center gap-3">
+                <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border bg-muted">
+                  {uploadedAvatarUrl ? (
+                    <img src={uploadedAvatarUrl} alt="Doctor photo preview" className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="text-xs text-muted-foreground">No photo</span>
+                  )}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  JPG, PNG, or WEBP. Uploaded directly to cloud storage.
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <Label
+                  htmlFor="doctor-photo"
+                  className={`inline-flex cursor-pointer items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm transition-colors hover:bg-slate-50 ${isUploadingPhoto ? "cursor-not-allowed opacity-50" : ""}`}
+                >
+                  {isUploadingPhoto ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  {isUploadingPhoto ? "Uploading..." : "Upload photo"}
+                </Label>
+                <input
+                  id="doctor-photo"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handlePhotoUpload}
+                  disabled={isUploadingPhoto}
+                />
+
+                {uploadedAvatarUrl && !isUploadingPhoto && !photoUploadError && (
+                  <span className="inline-flex items-center gap-1 text-xs text-green-600">
+                    <CheckCircle2 className="h-3.5 w-3.5" /> Photo uploaded
+                  </span>
+                )}
+                {photoUploadError && !isUploadingPhoto && (
+                  <span className="text-xs text-red-600">{photoUploadError}</span>
+                )}
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name *</Label>
@@ -232,21 +317,7 @@ export function CreateDoctorDialog({ open, onOpenChange, onSuccess }: CreateDoct
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="password">Password *</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Minimum 8 characters"
-                {...form.register("password")}
-                disabled={isSubmitting}
-              />
-              {form.formState.errors.password && (
-                <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
-              )}
-            </div>
-
+          <div className="space-y-2">
             <div className="space-y-2">
               <Label htmlFor="phone">Phone Number *</Label>
               <Input
@@ -254,7 +325,7 @@ export function CreateDoctorDialog({ open, onOpenChange, onSuccess }: CreateDoct
                 type="tel"
                 placeholder="+234 xxx xxx xxxx"
                 {...form.register("phone")}
-                disabled={isSubmitting}
+                disabled={isSubmitting || isUploadingPhoto}
               />
               {form.formState.errors.phone && (
                 <p className="text-sm text-destructive">{form.formState.errors.phone.message}</p>
@@ -311,11 +382,11 @@ export function CreateDoctorDialog({ open, onOpenChange, onSuccess }: CreateDoct
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isUploadingPhoto}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting || isUploadingPhoto}>
               {isSubmitting ? "Creating..." : "Create Doctor Account"}
             </Button>
           </div>

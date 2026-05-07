@@ -18,16 +18,22 @@ export const adminApi = {
   createDoctor: async (payload: {
     name: string;
     email: string;
-    password: string;
     location: string;
     state: string;
     address: string;
     phone: string;
     qualifications: string;
     specialty: string;
+    avatar?: string;
   }) => {
     const { data } = await apiClient.post("/admin/doctors", payload);
     return data;
+  },
+
+  getDoctorUploadUrl: async (filename: string, contentType: string) => {
+    return await apiClient.get("/admin/doctors/upload-url", {
+      params: { filename, contentType },
+    });
   },
 
   updateDoctorAvailability: async (doctorId: string, schedule: DoctorAvailabilitySchedule) => {

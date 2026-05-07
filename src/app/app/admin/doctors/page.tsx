@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, Plus, MapPin } from "lucide-react";
+import { Search, Plus, MapPin, UserCircle } from "lucide-react";
 import { DataTable } from "@/components/shared/data-table";
 import { PageHeader } from "@/components/shared/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -174,6 +174,13 @@ export default function AdminDoctorsPage() {
             <CardContent className="p-4">
               <div className="space-y-3">
                 <div>
+                  <div className="mb-2 flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-slate-100">
+                    {doctor.avatar ? (
+                      <img src={doctor.avatar} alt={doctor.name} className="h-full w-full object-cover" />
+                    ) : (
+                      <UserCircle className="h-8 w-8 text-slate-400" />
+                    )}
+                  </div>
                   <h3 className="font-semibold text-base">{doctor.name}</h3>
                   <p className="text-sm text-muted-foreground mt-1">{doctor.specialty}</p>
                   <p className="text-xs text-muted-foreground mt-1">{doctor.qualifications}</p>
@@ -226,6 +233,19 @@ export default function AdminDoctorsPage() {
         <DataTable
         data={rows}
         columns={[
+          {
+            key: "avatar",
+            header: "Photo",
+            render: (row) => (
+              <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-slate-100">
+                {row.avatar ? (
+                  <img src={row.avatar} alt={row.name} className="h-full w-full object-cover" />
+                ) : (
+                  <UserCircle className="h-5 w-5 text-slate-400" />
+                )}
+              </div>
+            ),
+          },
           { key: "name", header: "Name" },
           { key: "specialty", header: "Specialty" },
           { key: "qualifications", header: "Qualifications" },
