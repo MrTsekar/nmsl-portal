@@ -80,11 +80,23 @@ export default function AdminServicesPage() {
   const [editingLocation, setEditingLocation] = useState<string>(adminLocation);
   const [ksTitle, setKsTitle] = useState("");
   const [ksDesc, setKsDesc] = useState("");
+  const [otherServicesByLocation, setOtherServicesByLocation] = useState<Record<string, string[]>>({});
+  const [otherServicesLocation, setOtherServicesLocation] = useState<string>(adminLocation || NIGERIA_LOCATIONS[0]);
+  const [otherServiceInput, setOtherServiceInput] = useState("");
+  const [savingOtherServices, setSavingOtherServices] = useState(false);
 
   useEffect(() => {
     servicesApi.list().then((data) => {
       setServices(data);
       setLoading(false);
+    });
+
+    servicesApi.getOtherServices().then((rows) => {
+      const mapped = rows.reduce<Record<string, string[]>>((acc, row) => {
+        acc[row.location] = row.services ?? [];
+        return acc;
+      }, {});
+      setOtherServicesByLocation(mapped);
     });
   }, []);
 
@@ -254,6 +266,67 @@ export default function AdminServicesPage() {
     setServices((prev) => prev.filter((s) => s.id !== id));
   };
 
+  const currentOtherServices = otherServicesByLocation[otherServicesLocation] ?? [];
+
+  const addOtherService = () => {
+    const value = otherServiceInput.trim();
+    if (!value) return;
+    setOtherServicesByLocation((prev) => {
+      const existing = prev[otherServicesLocation] ?? [];
+      if (existing.some((item) => item.toLowerCase() === value.toLowerCase())) {
+        return prev;
+      }
+      return {
+        ...prev,
+        [otherServicesLocation]: [...existing, value],
+      };
+    });
+    setOtherServiceInput("");
+  };
+
+  const removeOtherService = (value: string) => {
+    setOtherServicesByLocation((prev) => ({
+      ...prev,
+      [otherServicesLocation]: (prev[otherServicesLocation] ?? []).filter((item) => item !== value),
+    }));
+  };
+
+  const saveOtherServices = async () => {
+    setSavingOtherServices(true);
+    try {
+      const saved = await servicesApi.saveOtherServices({
+        location: otherServicesLocation,
+        services: currentOtherServices,
+      });
+      setOtherServicesByLocation((prev) => ({
+        ...prev,
+        [saved.location]: saved.services ?? [],
+      }));
+      addNotification({
+        id: Date.now().toString(),
+        title: "Success",
+        message: `Other services saved for ${otherServicesLocation}`,
+        createdAt: new Date().toISOString(),
+        read: false,
+        category: "system",
+        roles: ["admin"],
+      });
+    } catch (error) {
+      addNotification({
+        id: Date.now().toString(),
+        title: "Error",
+        message: `Failed to save other services for ${otherServicesLocation}`,
+        createdAt: new Date().toISOString(),
+        read: false,
+        category: "system",
+        roles: ["admin"],
+      });
+      console.error('Error saving other services:', error);
+    } finally {
+      setSavingOtherServices(false);
+    }
+  };
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <PageHeader
@@ -273,6 +346,75 @@ export default function AdminServicesPage() {
           You can manage services across all NMSL facilities.
         </p>
       </div>
+
+      {/* All Services */}
+      <SectionCard title="Other services by location">
+        <div className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-[220px_1fr_auto] sm:items-end">
+            <div className="space-y-1">
+              <Label htmlFor="other-services-location">Location</Label>
+              <Select value={otherServicesLocation} onValueChange={setOtherServicesLocation}>
+                <SelectTrigger id="other-services-location">
+                  <SelectValue placeholder="Select location" />
+                </SelectTrigger>
+                <SelectContent>
+                  {NIGERIA_LOCATIONS.map((loc) => (
+                    <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="other-service-input">Add other service</Label>
+              <Input
+                id="other-service-input"
+                value={otherServiceInput}
+                onChange={(e) => setOtherServiceInput(e.target.value)}
+                placeholder="e.g. Rheumatology"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addOtherService();
+                  }
+                }}
+              />
+            </div>
+
+            <Button type="button" variant="outline" onClick={addOtherService}>
+              <Plus className="mr-1 h-4 w-4" /> Add
+            </Button>
+          </div>
+
+          <div className="min-h-[52px] rounded-lg border border-border/60 p-3">
+            {currentOtherServices.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No other services configured for {otherServicesLocation}.</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {currentOtherServices.map((item) => (
+                  <Badge key={item} variant="secondary" className="gap-1 px-2 py-1">
+                    {item}
+                    <button
+                      type="button"
+                      aria-label={`Remove ${item}`}
+                      onClick={() => removeOtherService(item)}
+                      className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full hover:bg-black/10"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end">
+            <Button type="button" onClick={saveOtherServices} disabled={savingOtherServices}>
+              {savingOtherServices ? 'Saving...' : 'Save Other Services'}
+            </Button>
+          </div>
+        </div>
+      </SectionCard>
 
       {/* All Services */}
       <SectionCard title="All services">

@@ -41,4 +41,16 @@ export const servicesApi = {
       params: { filename, contentType, type },
     });
   },
+
+  getOtherServices: async (location?: string): Promise<Array<{ id: string; location: string; services: string[] }>> => {
+    const { data } = await apiClient.get('/admin/services/other-services', {
+      params: location ? { location } : undefined,
+    });
+    return Array.isArray(data) ? data : [];
+  },
+
+  saveOtherServices: async (payload: { location: string; services: string[] }): Promise<{ id: string; location: string; services: string[] }> => {
+    const { data } = await apiClient.post('/admin/services/other-services', payload);
+    return data;
+  },
 };
