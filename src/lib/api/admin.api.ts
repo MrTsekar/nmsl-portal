@@ -24,6 +24,7 @@ export const adminApi = {
     phone: string;
     qualifications: string;
     specialty: string;
+    bio?: string;
     avatar?: string;
   }) => {
     const { data } = await apiClient.post("/admin/doctors", payload);

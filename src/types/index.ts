@@ -51,6 +51,7 @@ export interface Doctor {
   state?: string;
   phone?: string;
   qualifications?: string;
+  bio?: string;
   avatar?: string;
   isActive?: boolean;
   availabilitySchedule?: DoctorAvailabilitySchedule;

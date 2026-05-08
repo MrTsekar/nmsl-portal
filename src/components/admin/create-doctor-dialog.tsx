@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { adminApi } from "@/lib/api/admin.api";
 import { NIGERIA_LOCATIONS } from "@/lib/constants/locations";
@@ -45,6 +46,11 @@ const schema = z
     location: z.enum(LOCATION_OPTIONS),
     state: z.string().min(2, "State is required"),
     address: z.string().min(6, "Address must be at least 6 characters"),
+    bio: z
+      .string()
+      .max(2000, "Bio must be 2000 characters or fewer")
+      .optional()
+      .or(z.literal("")),
     avatar: z.string().optional(),
   })
   .superRefine((values, context) => {
@@ -82,6 +88,7 @@ export function CreateDoctorDialog({ open, onOpenChange, onSuccess }: CreateDoct
       location: "Abuja",
       state: "FCT",
       address: "",
+      bio: "",
       avatar: "",
     },
   });
@@ -132,7 +139,11 @@ export function CreateDoctorDialog({ open, onOpenChange, onSuccess }: CreateDoct
     try {
       setIsSubmitting(true);
       setError(null);
-      await adminApi.createDoctor(values);
+      const payload = {
+        ...values,
+        bio: values.bio?.trim() ? values.bio.trim() : undefined,
+      };
+      await adminApi.createDoctor(payload);
       form.reset();
       onOpenChange(false);
       onSuccess?.();
@@ -369,6 +380,24 @@ export function CreateDoctorDialog({ open, onOpenChange, onSuccess }: CreateDoct
                 <p className="text-sm text-destructive">{form.formState.errors.specialty.message}</p>
               )}
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="bio">About this Doctor</Label>
+            <Textarea
+              id="bio"
+              placeholder="A short biography that will appear on the public doctor profile page (e.g. background, experience, specialisations)."
+              rows={5}
+              maxLength={2000}
+              {...form.register("bio")}
+              disabled={isSubmitting}
+            />
+            <p className="text-xs text-muted-foreground">
+              Optional. Shown on the public website under “About {`{Doctor}`}”. Up to 2000 characters.
+            </p>
+            {form.formState.errors.bio && (
+              <p className="text-sm text-destructive">{form.formState.errors.bio.message}</p>
+            )}
           </div>
 
           {error && (
