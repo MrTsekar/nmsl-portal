@@ -47,6 +47,26 @@ export const adminApi = {
     return data;
   },
 
+  updateDoctor: async (id: string, payload: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    location?: string;
+    state?: string;
+    specialty?: string;
+    qualifications?: string;
+    bio?: string;
+    avatar?: string;
+  }): Promise<Doctor> => {
+    const { data } = await apiClient.patch(`/admin/doctors/${id}`, payload);
+    return data;
+  },
+
+  deleteDoctor: async (id: string): Promise<{ success: boolean; message: string }> => {
+    const { data } = await apiClient.delete(`/admin/doctors/${id}`);
+    return data;
+  },
+
   listAdmins: async (): Promise<{ admins: User[]; total: number }> => {
     const { data } = await apiClient.get("/admin/admins");
     return data ?? { admins: [], total: 0 };

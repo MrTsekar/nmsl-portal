@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, Plus, MapPin, UserCircle } from "lucide-react";
+import { Search, Plus, MapPin, UserCircle, Trash2 } from "lucide-react";
 import { DataTable } from "@/components/shared/data-table";
 import { PageHeader } from "@/components/shared/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { CreateDoctorDialog } from "@/components/admin/create-doctor-dialog";
+import { EditDoctorDialog } from "@/components/admin/edit-doctor-dialog";
 import { DoctorAvailabilityDialog, DoctorAvailability } from "@/components/admin/doctor-availability-dialog";
 import { useAuthStore } from "@/store/auth-store";
 import { useDoctors } from "@/hooks/use-app-data";
@@ -24,7 +25,9 @@ export default function AdminDoctorsPage() {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAvailabilityDialogOpen, setIsAvailabilityDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState<{ id: string; name: string; availabilitySchedule?: any } | null>(null);
+  const [editingDoctor, setEditingDoctor] = useState<any | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [availabilityError, setAvailabilityError] = useState<string | null>(null);
@@ -66,6 +69,20 @@ export default function AdminDoctorsPage() {
         setAvailabilityError("Failed to update availability. Please try again.");
       }
       setTimeout(() => setAvailabilityError(null), 6000);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => adminApi.deleteDoctor(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["doctors"] });
+      setSuccessMessage("Doctor account removed successfully!");
+      setTimeout(() => setSuccessMessage(null), 5000);
+    },
+    onError: (err: unknown) => {
+      const axiosErr = err as { response?: { status?: number; data?: { message?: string } } };
+      setAvailabilityError(axiosErr.response?.data?.message ?? "Failed to delete doctor.");
+      setTimeout(() => setAvailabilityError(null), 5000);
     },
   });
 
@@ -119,6 +136,24 @@ export default function AdminDoctorsPage() {
       doctorId: availabilityData.doctorId,
       schedule: availabilityData,
     });
+  };
+
+  const handleOpenEditDialog = (doctor: any) => {
+    setEditingDoctor(doctor);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ["doctors"] });
+    setEditingDoctor(null);
+    setSuccessMessage("Doctor profile updated successfully!");
+    setTimeout(() => setSuccessMessage(null), 5000);
+  };
+
+  const handleDeleteDoctor = (doctorId: string, doctorName: string) => {
+    if (window.confirm(`Are you sure you want to delete ${doctorName}? This action cannot be undone.`)) {
+      deleteMutation.mutate(doctorId);
+    }
   };
 
   if (doctors.isLoading) return <LoadState />;
@@ -216,10 +251,28 @@ export default function AdminDoctorsPage() {
                     variant="outline"
                     size="sm"
                     className="w-full"
+                    onClick={() => handleOpenEditDialog(doctor)}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
                     onClick={() => toggleMutation.mutate(doctor.id)}
                     disabled={toggleMutation.isPending}
                   >
                     {doctor.active ? "Deactivate" : "Reactivate"}
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => handleDeleteDoctor(doctor.id, doctor.name)}
+                    disabled={deleteMutation.isPending}
+                  >
+                    <Trash2 className="h-3 w-3 mr-1" />
+                    Delete
                   </Button>
                 </div>
               </div>
@@ -276,10 +329,26 @@ export default function AdminDoctorsPage() {
                 <Button
                   variant="outline"
                   size="sm"
+                  onClick={() => handleOpenEditDialog(row)}
+                >
+                  Edit
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => toggleMutation.mutate(row.id)}
                   disabled={toggleMutation.isPending}
                 >
                   {row.active ? "Deactivate" : "Reactivate"}
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => handleDeleteDoctor(row.id, row.name)}
+                  disabled={deleteMutation.isPending}
+                >
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  Delete
                 </Button>
               </div>
             ),
@@ -303,6 +372,15 @@ export default function AdminDoctorsPage() {
           initialAvailability={selectedDoctor.availabilitySchedule}
           onSave={handleSaveAvailability}
           isSaving={availabilityMutation.isPending}
+        />
+      )}
+
+      {editingDoctor && (
+        <EditDoctorDialog
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          doctor={editingDoctor}
+          onSuccess={handleEditSuccess}
         />
       )}
     </div>
